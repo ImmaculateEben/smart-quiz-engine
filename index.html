@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Quiz Engine - Entrance Examination</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>Smart Quiz Engine</h1>
+                <p>Entrance Examination</p>
+            </div>
+            <div class="header-info" id="userInfo" style="display: none;">
+                <span id="userName"></span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="app">
+            <!-- Screen 1: Landing / Login Selection -->
+            <section id="landingScreen" class="screen active">
+                <div class="welcome-card">
+                    <h2>Welcome to Smart Quiz Engine</h2>
+                    <p class="subtitle">Entrance Examination Portal</p>
+                    <div class="welcome-options">
+                        <button class="btn btn-primary" onclick="showScreen('loginScreen')">
+                            <span class="btn-icon">📝</span>
+                            Student Login
+                        </button>
+                        <button class="btn btn-secondary" id="adminLink" onclick="showScreen('adminLoginScreen')">
+                            <span class="btn-icon">🔐</span>
+                            Admin Panel
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen 2: User Registration -->
+            <section id="loginScreen" class="screen">
+                <div class="form-card">
+                    <h2>Student Registration</h2>
+                    <p class="form-subtitle">Enter your details to begin</p>
+                    <form id="registrationForm" onsubmit="handleRegistration(event)">
+                        <div class="form-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" required placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" placeholder="Enter your phone number">
+                        </div>
+                        <div class="form-group">
+                            <label for="school">School/Institution</label>
+                            <input type="text" id="school" placeholder="Enter your school name">
+                        </div>
+                        <div class="form-group">
+                            <label for="examCode">Exam Code *</label>
+                            <input type="text" id="examCode" required placeholder="Enter your exam code" maxlength="10">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" onclick="showScreen('landingScreen')">Back</button>
+                            <button type="submit" class="btn btn-primary">Continue</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Screen 3: Code Verification Result -->
+            <section id="codeVerificationScreen" class="screen">
+                <div class="form-card">
+                    <div id="codeValid" style="display: none;">
+                        <div class="success-icon">✓</div>
+                        <h2>Code Verified!</h2>
+                        <p>Your exam code has been validated successfully.</p>
+                        <button class="btn btn-primary" onclick="showScreen('subjectSelectionScreen')">Continue</button>
+                    </div>
+                    <div id="codeInvalid" style="display: none;">
+                        <div class="error-icon">✗</div>
+                        <h2>Invalid Code</h2>
+                        <p>The exam code you entered is invalid or has expired.</p>
+                        <button class="btn btn-outline" onclick="showScreen('loginScreen')">Try Again</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen 4: Subject Selection -->
+            <section id="subjectSelectionScreen" class="screen">
+                <div class="form-card">
+                    <h2>Select Subjects</h2>
+                    <p class="form-subtitle">Choose the subjects you want to be examined on</p>
+                    <div class="subjects-grid">
+                        <label class="subject-checkbox">
+                            <input type="checkbox" id="subjectEnglish" value="English" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="subject-name">English</span>
+                        </label>
+                        <label class="subject-checkbox">
+                            <input type="checkbox" id="subjectMathematics" value="Mathematics" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="subject-name">Mathematics</span>
+                        </label>
+                        <label class="subject-checkbox">
+                            <input type="checkbox" id="subjectPhysics" value="Physics" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="subject-name">Physics</span>
+                        </label>
+                        <label class="subject-checkbox">
+                            <input type="checkbox" id="subjectChemistry" value="Chemistry" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="subject-name">Chemistry</span>
+                        </label>
+                    </div>
+                    <p class="help-text">Select at least one subject</p>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" onclick="showScreen('loginScreen')">Back</button>
+                        <button class="btn btn-primary" onclick="handleSubjectSelection()">Continue</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen 5: Instructions -->
+            <section id="instructionsScreen" class="screen">
+                <div class="instructions-card">
+                    <h2>Examination Instructions</h2>
+                    <div class="instructions-list">
+                        <div class="instruction-item">
+                            <span class="instruction-number">1</span>
+                            <p>Answer all questions. Each question carries equal marks.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-number">2</span>
+                            <p>You have <strong id="totalTime">30</strong> minutes to complete the exam.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-number">3</span>
+                            <p>Each subject contains questions of varying difficulty (Easy, Medium, Hard).</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-number">4</span>
+                            <p>You can pause the timer if needed, but the clock will continue.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-number">5</span>
+                            <p>Review your answers before submitting. Once submitted, you cannot go back.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-number">6</span>
+                            <p>Your results will be displayed after submission with score breakdown per subject.</p>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-outline" onclick="showScreen('codeVerificationScreen')">Back</button>
+                        <button class="btn btn-primary" onclick="startQuiz()">Start Examination</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen 7: Quiz Screen -->
+            <section id="quizScreen" class="screen">
+                <div class="quiz-header">
+                    <div class="quiz-info">
+                        <span class="subject-badge" id="currentSubject">English</span>
+                    </div>
+                    <div class="timer-container">
+                        <span class="timer-icon">⏱</span>
+                        <span id="timerDisplay">30:00</span>
+                    </div>
+                </div>
+                
+                <div class="quiz-actions-bar">
+                    <button class="btn btn-outline btn-sm" onclick="viewCurrentQuestionPaper()">📄 View Question Paper</button>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions">40</span></span>
+                        <span id="subjectProgress">English: 0/10</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3 id="questionText">Question text goes here</h3>
+                    <div class="options-container" id="optionsContainer">
+                        <!-- Options will be dynamically inserted -->
+                    </div>
+                </div>
+
+                <div class="quiz-navigation">
+                    <button class="btn btn-outline" id="skipBtn" onclick="skipQuestion()">Skip</button>
+                    <button class="btn btn-outline" id="prevBtn" onclick="prevQuestion()" disabled>Previous</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">Next</button>
+                </div>
+            </section>
+
+            <!-- Screen 7: Quiz Complete -->
+            <section id="quizCompleteScreen" class="screen">
+                <div class="result-card">
+                    <div class="result-header">
+                        <h2>Examination Complete!</h2>
+                        <div class="result-icon">🎉</div>
+                    </div>
+                    <div class="score-display">
+                        <div class="total-score">
+                            <span class="score-label">Total Score</span>
+                            <span class="score-value"><span id="totalScore">0</span>/<span id="maxScore">0</span></span>
+                            <span class="score-percentage"><span id="scorePercentage">0</span>%</span>
+                        </div>
+                    </div>
+                    <div class="score-breakdown" id="scoreBreakdown">
+                        <!-- Score breakdown per subject -->
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn btn-primary" onclick="showReview()">Review Answers</button>
+                        <button class="btn btn-secondary" onclick="startNewQuiz()">New Examination</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen 8: Review Answers -->
+            <section id="reviewScreen" class="screen">
+                <div class="review-header">
+                    <h2>Review Your Answers</h2>
+                    <div class="review-filters">
+                        <select id="reviewFilter" onchange="filterReview()">
+                            <option value="all">All Questions</option>
+                            <option value="correct">Correct Only</option>
+                            <option value="incorrect">Incorrect Only</option>
+                            <option value="English">English</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="review-container" id="reviewContainer">
+                    <!-- Review items will be inserted here -->
+                </div>
+                <div class="review-actions">
+                    <button class="btn btn-outline" onclick="showScreen('quizCompleteScreen')">Back to Results</button>
+                    <button class="btn btn-primary" onclick="startNewQuiz()">Start New Quiz</button>
+                </div>
+            </section>
+
+            <!-- Admin Panel Screens -->
+
+            <!-- Admin Login -->
+            <section id="adminLoginScreen" class="screen">
+                <div class="form-card">
+                    <h2>Admin Login</h2>
+                    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                        <div class="form-group">
+                            <label for="adminUsername">Username</label>
+                            <input type="text" id="adminUsername" required placeholder="Enter admin username">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password</label>
+                            <input type="password" id="adminPassword" required placeholder="Enter admin password">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" onclick="showScreen('landingScreen')">Back</button>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Admin Dashboard -->
+            <section id="adminDashboardScreen" class="screen">
+                <div class="admin-header">
+                    <h2>Admin Dashboard</h2>
+                    <button class="btn btn-outline" onclick="showScreen('landingScreen')">Logout</button>
+                </div>
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="showAdminTab('codes')">Exam Codes</button>
+                    <button class="tab-btn" onclick="showAdminTab('subjects')">Subjects</button>
+                    <button class="tab-btn" onclick="showAdminTab('settings')">⚙️ Settings</button>
+                    <button class="tab-btn" onclick="showAdminTab('results')">Results</button>
+                </div>
+                <div id="adminCodesTab" class="admin-tab-content">
+                    <div class="admin-toolbar">
+                        <button class="btn btn-primary" onclick="generateNewCode()">Generate New Code</button>
+                        <input type="text" id="searchCode" placeholder="Search codes..." oninput="filterCodes()">
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Status</th>
+                                <th>Subjects</th>
+                                <th>Duration</th>
+                                <th>Valid Hours</th>
+                                <th>Questions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codesTableBody">
+                            <!-- Codes will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="adminSubjectsTab" class="admin-tab-content" style="display: none;">
+                    <div class="admin-toolbar">
+                        <button class="btn btn-primary" onclick="showAddSubjectModal()">+ Add Subject</button>
+                        <button class="btn btn-secondary" onclick="showAddQuestionChoice()">+ Add Questions</button>
+                    </div>
+                    <div id="questionManagerContainer" style="display: none; padding: 20px; background: #f8f9fa; margin-bottom: 15px; border-radius: 8px;">
+                        <!-- Question management will appear here -->
+                    </div>
+                    <div id="subjectsList" class="subjects-admin-list">
+                        <!-- Subjects will be listed here -->
+                    </div>
+                </div>
+                <div id="adminSettingsTab" class="admin-tab-content" style="display: none;">
+                    <div style="padding: 20px;">
+                        <h3 style="margin-bottom: 20px;">⚙️ System Settings</h3>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 10px;">Admin Management</h4>
+                            <p style="color: var(--text-light); margin-bottom: 15px;">Add, edit, or manage admin accounts.</p>
+                            <button class="btn btn-primary" id="addAdminBtn" onclick="showAddAdminModal()">+ Add Admin</button>
+                            <div id="adminList" style="margin-top: 15px; max-height: 200px; overflow-y: auto;">
+                                <!-- Admins will be listed here -->
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 10px;">Data Management</h4>
+                            <p style="color: var(--text-light); margin-bottom: 15px;">Manage your quiz data, reset system, or clear all data.</p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="btn btn-outline" onclick="exportAllData()">📤 Export Data</button>
+                                <button class="btn btn-outline" onclick="importData()">📥 Import Data</button>
+                                <button class="btn btn-danger" onclick="resetAllData()">🗑️ Reset All Data</button>
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 10px;">System Info</h4>
+                            <p><strong>Total Subjects:</strong> <span id="settingsSubjectCount">0</span></p>
+                            <p><strong>Total Questions:</strong> <span id="settingsQuestionCount">0</span></p>
+                            <p><strong>Total Exam Codes:</strong> <span id="settingsCodeCount">0</span></p>
+                            <p><strong>Total Results:</strong> <span id="settingsResultCount">0</span></p>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 10px;">About</h4>
+                            <p>Smart Quiz Engine v1.0</p>
+                            <p style="color: var(--text-light);">A comprehensive quiz management system for examinations.</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="adminResultsTab" class="admin-tab-content" style="display: none;">
+                    <div class="admin-toolbar">
+                        <button class="btn btn-primary" onclick="renderResultsList()">🔄 Refresh Results</button>
+                        <button class="btn btn-success" onclick="exportResultsToExcel()">📊 Export to Excel</button>
+                    </div>
+                    <div class="results-list" id="resultsList">
+                        <!-- Results will be inserted here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Smart Quiz Engine. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="quiz-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
