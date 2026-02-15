@@ -182,7 +182,19 @@ function verifyExamCode() {
             selectedSubjects: AppState.selectedSubjects,
             examDuration: AppState.examDuration,
             questionsPerSubject: AppState.questionsPerSubject,
-            allowReview: AppState.allowReview
+            allowReview: AppState.allowReview,
+            // Save full quiz state for session persistence on refresh
+            currentState: 'quiz',
+            questions: AppState.questions,
+            currentQuestionIndex: AppState.currentQuestionIndex,
+            userAnswers: AppState.userAnswers,
+            scores: AppState.scores,
+            timeRemaining: AppState.timeRemaining,
+            isPaused: AppState.isPaused,
+            currentSubject: AppState.currentSubject,
+            currentSubjectIndex: AppState.currentSubjectIndex,
+            subjectQuestions: AppState.subjectQuestions,
+            subjectsAnswered: AppState.subjectsAnswered
         };
         localStorage.setItem('examSession', JSON.stringify(examSession));
         
@@ -449,11 +461,39 @@ function updateCurrentSubject() {
     }
 }
 
+// Save exam session to localStorage for persistence on refresh
+function saveExamSession() {
+    const examSession = {
+        selectedSubjects: AppState.selectedSubjects,
+        examDuration: AppState.examDuration,
+        questionsPerSubject: AppState.questionsPerSubject,
+        allowReview: AppState.allowReview,
+        // Save full quiz state for session persistence on refresh
+        currentState: 'quiz',
+        questions: AppState.questions,
+        currentQuestionIndex: AppState.currentQuestionIndex,
+        userAnswers: AppState.userAnswers,
+        scores: AppState.scores,
+        timeRemaining: AppState.timeRemaining,
+        isPaused: AppState.isPaused,
+        currentSubject: AppState.currentSubject,
+        currentSubjectIndex: AppState.currentSubjectIndex,
+        subjectQuestions: AppState.subjectQuestions,
+        subjectsAnswered: AppState.subjectsAnswered
+    };
+    localStorage.setItem('examSession', JSON.stringify(examSession));
+}
+
 function startTimer() {
     AppState.timer = setInterval(() => {
         if (AppState.timeRemaining > 0) {
             AppState.timeRemaining--;
             updateTimerDisplay();
+            
+            // Save exam session periodically (every 10 seconds)
+            if (AppState.timeRemaining % 10 === 0) {
+                saveExamSession();
+            }
             
             if (AppState.timeRemaining <= 0) {
                 clearInterval(AppState.timer);
@@ -485,15 +525,22 @@ function displayQuestion() {
         // Use subject-specific questions if set, otherwise use all questions
         const questions = AppState.subjectQuestions || AppState.questions;
         
+        console.log('displayQuestion called, questions:', questions);
+        console.log('currentQuestionIndex:', AppState.currentQuestionIndex);
+        console.log('selectedSubjects:', AppState.selectedSubjects);
+        console.log('scores:', AppState.scores);
+        
         if (!questions || questions.length === 0) {
-            alert('No questions available.');
+            alert('No questions available. Please check console for details.');
+            console.log('No questions available!');
             return;
         }
         
         const question = questions[AppState.currentQuestionIndex];
         
         if (!question) {
-            alert('Question not found.');
+            alert('Question not found at index ' + AppState.currentQuestionIndex);
+            console.log('Question not found at index:', AppState.currentQuestionIndex);
             return;
         }
         
@@ -504,20 +551,38 @@ function displayQuestion() {
         }
         
         // Update question text
-        document.getElementById('questionText').textContent = question.question;
+        const questionTextEl = document.getElementById('questionText');
+        if (questionTextEl) {
+            questionTextEl.textContent = question.question;
+        } else {
+            console.error('questionText element not found');
+        }
         
         // Update progress - use subject-specific progress
-        document.getElementById('currentQuestionNum').textContent = AppState.currentQuestionIndex + 1;
+        const currentQuestionNumEl = document.getElementById('currentQuestionNum');
+        if (currentQuestionNumEl) {
+            currentQuestionNumEl.textContent = AppState.currentQuestionIndex + 1;
+        }
         
         // Subject progress
         const subjectProgress = AppState.scores[question.subject];
-        const answeredCount = subjectProgress.questions.filter(q => q.userAnswer !== null).length;
-        document.getElementById('subjectProgress').textContent = 
-            `${question.subject}: ${answeredCount}/${subjectProgress.total}`;
+        const subjectProgressEl = document.getElementById('subjectProgress');
+        if (subjectProgressEl) {
+            if (subjectProgress) {
+                const answeredCount = subjectProgress.questions.filter(q => q.userAnswer !== null).length;
+                subjectProgressEl.textContent = 
+                    `${question.subject}: ${answeredCount}/${subjectProgress.total}`;
+            } else {
+                subjectProgressEl.textContent = question.subject || 'General';
+            }
+        }
         
         // Update progress bar - for subject-specific view
-        const progress = ((AppState.currentQuestionIndex + 1) / questions.length) * 100;
-        document.getElementById('progressFill').style.width = `${progress}%`;
+        const progressFill = document.getElementById('progressFill');
+        if (progressFill) {
+            const progress = ((AppState.currentQuestionIndex + 1) / questions.length) * 100;
+            progressFill.style.width = `${progress}%`;
+        }
         
         // Update total questions display
         const totalQuestionsEl = document.getElementById('totalQuestions');
@@ -531,7 +596,17 @@ function displayQuestion() {
         
         // Display options
         const optionsContainer = document.getElementById('optionsContainer');
+        if (!optionsContainer) {
+            console.error('optionsContainer element not found');
+            return;
+        }
         optionsContainer.innerHTML = '';
+        
+        if (!question.options || question.options.length === 0) {
+            console.error('No options for question:', question);
+            optionsContainer.innerHTML = '<p class="error">No options available for this question.</p>';
+            return;
+        }
         
         const letters = ['A', 'B', 'C', 'D'];
         question.options.forEach((option, index) => {
@@ -541,7 +616,10 @@ function displayQuestion() {
             
             // Check if this option was previously selected using global index
             const globalIndex = question.globalIndex;
-            const userAnswer = AppState.userAnswers[globalIndex];
+            let userAnswer = null;
+            if (globalIndex !== undefined && AppState.userAnswers[globalIndex]) {
+                userAnswer = AppState.userAnswers[globalIndex];
+            }
             if (userAnswer && userAnswer.selectedOption === index) {
                 optionEl.classList.add('selected');
             }
@@ -585,6 +663,9 @@ function selectOption(optionIndex) {
         questionScore.userAnswer = optionIndex;
     }
     
+    // Save exam session to localStorage
+    saveExamSession();
+    
     // Update UI
     const options = document.querySelectorAll('.option-item');
     options.forEach((opt, index) => {
@@ -599,6 +680,7 @@ function prevQuestion() {
     if (AppState.currentQuestionIndex > 0) {
         AppState.currentQuestionIndex--;
         displayQuestion();
+        saveExamSession();
     }
 }
 
@@ -3003,14 +3085,47 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedUser) {
         const user = JSON.parse(savedUser);
         AppState.user = user;
+        
         // Restore exam session if in progress
         const examSession = localStorage.getItem('examSession');
         if (examSession) {
             const session = JSON.parse(examSession);
-            AppState.selectedSubjects = session.selectedSubjects;
+            AppState.selectedSubjects = session.selectedSubjects || [];
             AppState.examDuration = session.examDuration;
             AppState.questionsPerSubject = session.questionsPerSubject;
             AppState.allowReview = session.allowReview;
+            
+            // Restore full quiz state if available
+            if (session.questions && session.questions.length > 0) {
+                AppState.questions = session.questions;
+                AppState.currentQuestionIndex = session.currentQuestionIndex || 0;
+                AppState.userAnswers = session.userAnswers || [];
+                AppState.scores = session.scores || {};
+                AppState.timeRemaining = session.timeRemaining || 0;
+                AppState.isPaused = session.isPaused || false;
+                AppState.currentSubject = session.currentSubject;
+                AppState.currentSubjectIndex = session.currentSubjectIndex || 0;
+                AppState.subjectQuestions = session.subjectQuestions || [];
+                AppState.subjectsAnswered = session.subjectsAnswered || {};
+                
+                // Show user info in header
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('userName').textContent = user.fullName;
+                
+                // If quiz was in progress, go directly to quiz screen
+                if (AppState.questions.length > 0) {
+                    showScreen('quizScreen');
+                    
+                    // Restart timer if it was running
+                    if (AppState.timeRemaining > 0 && !AppState.isPaused) {
+                        startTimer();
+                    }
+                    
+                    // Display current question
+                    displayQuestion();
+                    return;
+                }
+            }
         }
         document.getElementById('userInfo').style.display = 'block';
         document.getElementById('userName').textContent = user.fullName;
