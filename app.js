@@ -299,8 +299,9 @@ function prepareQuestions() {
         // Shuffle questions
         shuffleArray(subjectQuestions);
         
-        // Take required number of questions
-        const selectedQuestions = subjectQuestions.slice(0, AppState.questionsPerSubject);
+        // Take required number of questions - default to 5 if not set
+        const questionsCount = AppState.questionsPerSubject || 5;
+        const selectedQuestions = subjectQuestions.slice(0, questionsCount);
         
         // Add to main question array
         selectedQuestions.forEach((q, index) => {
@@ -319,9 +320,6 @@ function prepareQuestions() {
         });
     });
     
-    // Shuffle final questions
-    shuffleArray(AppState.questions);
-    
     // Initialize user answers and add global index to each question
     let globalIndex = 0;
     AppState.questions.forEach((q) => {
@@ -336,7 +334,9 @@ function prepareQuestions() {
     });
     
     // Update total questions display
-    document.getElementById('totalQuestions').textContent = AppState.questions.length;
+    if (document.getElementById('totalQuestions')) {
+        document.getElementById('totalQuestions').textContent = AppState.questions.length;
+    }
 }
 
 // Fisher-Yates shuffle
@@ -352,71 +352,76 @@ function shuffleArray(array) {
 // QUIZ START & TIMER
 // ============================================
 function startQuiz() {
-    // Check if exam code has been verified
-    if (!AppState.user.examCode) {
-        alert('Please enter a valid exam code first.');
-        showScreen('loginScreen');
-        return;
+    try {
+        // Check if exam code has been verified
+        if (!AppState.user.examCode) {
+            alert('Please enter a valid exam code first.');
+            showScreen('loginScreen');
+            return;
+        }
+        
+        // Check if subjects are selected
+        if (!AppState.selectedSubjects || AppState.selectedSubjects.length === 0) {
+            alert('Please select at least one subject.');
+            showScreen('subjectSelectionScreen');
+            return;
+        }
+        
+        // Load questions
+        loadSubjects();
+        
+        // Check if there are questions available
+        let totalAvailableQuestions = 0;
+        AppState.selectedSubjects.forEach(subject => {
+            const subjectQuestions = AppState.allQuestions[subject] || [];
+            totalAvailableQuestions += subjectQuestions.length;
+        });
+        
+        if (totalAvailableQuestions === 0) {
+            alert('No questions available for the selected subjects. Please contact your administrator to add questions.');
+            return;
+        }
+        
+        // Ensure we have duration
+        const foundCode = AppState.codes.find(c => c.code === AppState.user.examCode);
+        if (foundCode) {
+            AppState.examDuration = foundCode.duration || 30;
+        } else {
+            AppState.examDuration = 30;
+        }
+        
+        prepareQuestions();
+        
+        // Check if questions were prepared
+        if (AppState.questions.length === 0) {
+            alert('Not enough questions available. Please contact your administrator.');
+            return;
+        }
+        
+        // Use duration from code, default to 30 minutes
+        const totalMinutes = AppState.examDuration;
+        AppState.timeRemaining = totalMinutes * 60;
+        AppState.isPaused = false;
+        
+        // Order questions by subject - sequential subjects
+        orderQuestionsBySubject();
+        
+        // Initialize current subject index
+        AppState.currentSubjectIndex = 0;
+        updateCurrentSubject();
+        
+        // Start timer
+        startTimer();
+        
+        // Show first question
+        AppState.currentQuestionIndex = 0;
+        displayQuestion();
+        
+        showScreen('quizScreen');
+    } catch (error) {
+        console.error('Error starting quiz:', error);
+        alert('An error occurred while starting the quiz. Please try again.');
     }
-    
-    // Check if subjects are selected
-    if (!AppState.selectedSubjects || AppState.selectedSubjects.length === 0) {
-        alert('Please select at least one subject.');
-        showScreen('subjectSelectionScreen');
-        return;
-    }
-    
-    // Load questions
-    loadSubjects();
-    
-    // Check if there are questions available
-    let totalAvailableQuestions = 0;
-    AppState.selectedSubjects.forEach(subject => {
-        const subjectQuestions = AppState.allQuestions[subject] || [];
-        totalAvailableQuestions += subjectQuestions.length;
-    });
-    
-    if (totalAvailableQuestions === 0) {
-        alert('No questions available for the selected subjects. Please contact your administrator to add questions.');
-        return;
-    }
-    
-    // Ensure we have duration
-    const foundCode = AppState.codes.find(c => c.code === AppState.user.examCode);
-    if (foundCode) {
-        AppState.examDuration = foundCode.duration || 30;
-    } else {
-        AppState.examDuration = 30;
-    }
-    
-    prepareQuestions();
-    
-    // Check if questions were prepared
-    if (AppState.questions.length === 0) {
-        alert('Not enough questions available. Please contact your administrator.');
-        return;
-    }
-    
-    // Use duration from code, default to 30 minutes
-    const totalMinutes = AppState.examDuration;
-    AppState.timeRemaining = totalMinutes * 60;
-    AppState.isPaused = false;
-    
-    // Order questions by subject - sequential subjects
-    orderQuestionsBySubject();
-    
-    // Initialize current subject index
-    AppState.currentSubjectIndex = 0;
-    updateCurrentSubject();
-    
-    // Start timer
-    startTimer();
-    
-    // Show first question
-    AppState.currentQuestionIndex = 0;
-    displayQuestion();
-    
-    showScreen('quizScreen');
 }
 
 function orderQuestionsBySubject() {
@@ -476,70 +481,91 @@ function updateTimerDisplay() {
 // QUESTION DISPLAY
 // ============================================
 function displayQuestion() {
-    // Use subject-specific questions if set, otherwise use all questions
-    const questions = AppState.subjectQuestions || AppState.questions;
-    const question = questions[AppState.currentQuestionIndex];
-    
-    // Update subject badge
-    document.getElementById('currentSubject').textContent = question.subject;
-    
-    // Update question text
-    document.getElementById('questionText').textContent = question.question;
-    
-    // Update progress - use subject-specific progress
-    document.getElementById('currentQuestionNum').textContent = AppState.currentQuestionIndex + 1;
-    
-    // Subject progress
-    const subjectProgress = AppState.scores[question.subject];
-    const answeredCount = subjectProgress.questions.filter(q => q.userAnswer !== null).length;
-    document.getElementById('subjectProgress').textContent = 
-        `${question.subject}: ${answeredCount}/${subjectProgress.total}`;
-    
-    // Update progress bar - for subject-specific view
-    const progress = ((AppState.currentQuestionIndex + 1) / questions.length) * 100;
-    document.getElementById('progressFill').style.width = `${progress}%`;
-    
-    // Update total questions display
-    const totalQuestionsEl = document.getElementById('totalQuestions');
-    if (AppState.subjectQuestions) {
-        totalQuestionsEl.textContent = questions.length;
-    } else {
-        totalQuestionsEl.textContent = AppState.questions.length;
-    }
-    
-    // Display options
-    const optionsContainer = document.getElementById('optionsContainer');
-    optionsContainer.innerHTML = '';
-    
-    const letters = ['A', 'B', 'C', 'D'];
-    question.options.forEach((option, index) => {
-        const optionEl = document.createElement('div');
-        optionEl.className = 'option-item';
-        optionEl.onclick = () => selectOption(index);
+    try {
+        // Use subject-specific questions if set, otherwise use all questions
+        const questions = AppState.subjectQuestions || AppState.questions;
         
-        // Check if this option was previously selected using global index
-        const globalIndex = question.globalIndex;
-        const userAnswer = AppState.userAnswers[globalIndex];
-        if (userAnswer && userAnswer.selectedOption === index) {
-            optionEl.classList.add('selected');
+        if (!questions || questions.length === 0) {
+            alert('No questions available.');
+            return;
         }
         
-        optionEl.innerHTML = `
-            <span class="option-letter">${letters[index]}</span>
-            <span class="option-text">${option}</span>
-        `;
+        const question = questions[AppState.currentQuestionIndex];
         
-        optionsContainer.appendChild(optionEl);
-    });
-    
-    // Update navigation buttons
-    document.getElementById('prevBtn').disabled = AppState.currentQuestionIndex === 0;
-    
-    const nextBtn = document.getElementById('nextBtn');
-    if (AppState.currentQuestionIndex === questions.length - 1) {
-        nextBtn.textContent = 'Finish Subject';
-    } else {
-        nextBtn.textContent = 'Next';
+        if (!question) {
+            alert('Question not found.');
+            return;
+        }
+        
+        // Update subject badge
+        const subjectEl = document.getElementById('currentSubject');
+        if (subjectEl) {
+            subjectEl.textContent = question.subject || 'General';
+        }
+        
+        // Update question text
+        document.getElementById('questionText').textContent = question.question;
+        
+        // Update progress - use subject-specific progress
+        document.getElementById('currentQuestionNum').textContent = AppState.currentQuestionIndex + 1;
+        
+        // Subject progress
+        const subjectProgress = AppState.scores[question.subject];
+        const answeredCount = subjectProgress.questions.filter(q => q.userAnswer !== null).length;
+        document.getElementById('subjectProgress').textContent = 
+            `${question.subject}: ${answeredCount}/${subjectProgress.total}`;
+        
+        // Update progress bar - for subject-specific view
+        const progress = ((AppState.currentQuestionIndex + 1) / questions.length) * 100;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+        
+        // Update total questions display
+        const totalQuestionsEl = document.getElementById('totalQuestions');
+        if (totalQuestionsEl) {
+            if (AppState.subjectQuestions) {
+                totalQuestionsEl.textContent = questions.length;
+            } else {
+                totalQuestionsEl.textContent = AppState.questions.length;
+            }
+        }
+        
+        // Display options
+        const optionsContainer = document.getElementById('optionsContainer');
+        optionsContainer.innerHTML = '';
+        
+        const letters = ['A', 'B', 'C', 'D'];
+        question.options.forEach((option, index) => {
+            const optionEl = document.createElement('div');
+            optionEl.className = 'option-item';
+            optionEl.onclick = () => selectOption(index);
+            
+            // Check if this option was previously selected using global index
+            const globalIndex = question.globalIndex;
+            const userAnswer = AppState.userAnswers[globalIndex];
+            if (userAnswer && userAnswer.selectedOption === index) {
+                optionEl.classList.add('selected');
+            }
+            
+            optionEl.innerHTML = `
+                <span class="option-letter">${letters[index]}</span>
+                <span class="option-text">${option}</span>
+            `;
+            
+            optionsContainer.appendChild(optionEl);
+        });
+        
+        // Update navigation buttons
+        document.getElementById('prevBtn').disabled = AppState.currentQuestionIndex === 0;
+        
+        const nextBtn = document.getElementById('nextBtn');
+        if (AppState.currentQuestionIndex === questions.length - 1) {
+            nextBtn.textContent = 'Finish Subject';
+        } else {
+            nextBtn.textContent = 'Next';
+        }
+    } catch (error) {
+        console.error('Error displaying question:', error);
+        alert('An error occurred while displaying the question.');
     }
 }
 
