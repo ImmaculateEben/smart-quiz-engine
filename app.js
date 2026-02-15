@@ -454,15 +454,21 @@ function startQuiz() {
         // Load questions
         loadSubjects();
         
+        console.log('startQuiz - selectedSubjects:', AppState.selectedSubjects);
+        console.log('startQuiz - allQuestions:', AppState.allQuestions);
+        
         // Check if there are questions available
         let totalAvailableQuestions = 0;
         AppState.selectedSubjects.forEach(subject => {
             const subjectQuestions = AppState.allQuestions[subject] || [];
+            console.log('startQuiz - subject:', subject, 'questions:', subjectQuestions.length);
             totalAvailableQuestions += subjectQuestions.length;
         });
         
+        console.log('startQuiz - totalAvailableQuestions:', totalAvailableQuestions);
+        
         if (totalAvailableQuestions === 0) {
-            alert('No questions available for the selected subjects. Please contact your administrator to add questions.');
+            alert('No questions available for the selected subjects. Please contact your administrator to add questions.\n\nCheck browser console (F12) for debug info.');
             return;
         }
         
@@ -971,11 +977,33 @@ function loadSubjects() {
         AppState.subjects = [...DEFAULT_SUBJECTS];
     }
     
-    // Build questions object
+    // Build questions object - use stored questions OR fallback to DEFAULT_QUESTIONS
     AppState.allQuestions = {};
+    
+    // First try to load from stored subjects
     AppState.subjects.forEach(sub => {
-        AppState.allQuestions[sub.name] = sub.questions || [];
+        if (sub.questions && sub.questions.length > 0) {
+            AppState.allQuestions[sub.name] = sub.questions;
+        }
     });
+    
+    // If no questions loaded from storage, use DEFAULT_QUESTIONS
+    Object.keys(DEFAULT_QUESTIONS).forEach(subject => {
+        if (!AppState.allQuestions[subject] || AppState.allQuestions[subject].length === 0) {
+            AppState.allQuestions[subject] = DEFAULT_QUESTIONS[subject];
+        }
+    });
+    
+    // Count total questions
+    let totalQuestions = 0;
+    Object.values(AppState.allQuestions).forEach(qs => totalQuestions += qs.length);
+    console.log('loadSubjects - total questions loaded:', totalQuestions);
+    
+    if (totalQuestions === 0) {
+        alert('DEBUG: No questions loaded! Check console for details.');
+        console.error('CRITICAL: No questions could be loaded from storage or defaults!');
+        console.log('DEFAULT_QUESTIONS keys:', Object.keys(DEFAULT_QUESTIONS));
+    }
 }
 
 function saveResults(totalCorrect, totalQuestions, percentage) {
