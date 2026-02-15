@@ -303,6 +303,10 @@ main {
     border-bottom: 1px solid var(--border-color);
 }
 
+.instruction-item:first-child {
+    margin-top: 20px;
+}
+
 .instruction-item:last-child {
     border-bottom: none;
 }
@@ -1152,10 +1156,31 @@ main {
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: 30px;
 }
 
 .hero-buttons .btn {
     min-width: 180px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.hero-buttons .btn-primary {
+    background: #22c55e;
+    color: white;
+}
+
+.hero-buttons .btn-primary:hover {
+    background: #16a34a;
+}
+
+.hero-buttons .btn-secondary {
+    background: white;
+    color: var(--primary-color);
+}
+
+.hero-buttons .btn-secondary:hover {
+    background: #f0f0f0;
 }
 
 /* Landing Section Styles */
@@ -1290,6 +1315,69 @@ main {
     flex-shrink: 0;
 }
 
+/* Testimonials Section */
+.testimonials-section {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.testimonial-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.testimonial-content {
+    margin-bottom: 20px;
+}
+
+.testimonial-content p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    font-style: italic;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-avatar {
+    width: 45px;
+    height: 45px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.author-info h4 {
+    font-size: 0.95rem;
+    color: var(--primary-color);
+    margin-bottom: 2px;
+}
+
+.author-info p {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
 /* Landing CTA */
 .landing-cta {
     text-align: center;
@@ -1348,6 +1436,10 @@ main {
 /* Landing Page Responsive */
 @media (max-width: 900px) {
     .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .testimonials-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -1446,6 +1538,12 @@ main {
     
     #codeModal > div {
         padding: 20px 15px !important;
+    }
+    
+    /* Testimonials mobile */
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 }
 

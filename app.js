@@ -240,6 +240,20 @@ function updateInstructionsWithSubjects() {
 // ============================================
 // SUBJECT SELECTION
 // ============================================
+function goToNextStep() {
+    // Check if subjects are already selected
+    if (AppState.selectedSubjects && AppState.selectedSubjects.length > 0) {
+        // Update total time and go to instructions
+        const totalMinutes = AppState.selectedSubjects.length * 7.5;
+        document.getElementById('totalTime').textContent = Math.round(totalMinutes);
+        showScreen('instructionsScreen');
+    } else {
+        // Go to subject selection
+        showScreen('subjectSelectionScreen');
+    }
+}
+
+// ============================================
 function handleSubjectSelection() {
     const checkboxes = document.querySelectorAll('.subject-checkbox input:checked');
     AppState.selectedSubjects = Array.from(checkboxes).map(cb => cb.value);
@@ -339,16 +353,31 @@ function shuffleArray(array) {
 // ============================================
 function startQuiz() {
     // Check if exam code has been verified
-    if (!AppState.user.examCode || !AppState.selectedSubjects || AppState.selectedSubjects.length === 0) {
+    if (!AppState.user.examCode) {
         alert('Please enter a valid exam code first.');
-        showScreen('codeVerificationScreen');
+        showScreen('loginScreen');
         return;
+    }
+    
+    // Check if subjects are selected
+    if (!AppState.selectedSubjects || AppState.selectedSubjects.length === 0) {
+        alert('Please select at least one subject.');
+        showScreen('subjectSelectionScreen');
+        return;
+    }
+    
+    // Ensure we have duration
+    const foundCode = AppState.codes.find(c => c.code === AppState.user.examCode);
+    if (foundCode) {
+        AppState.examDuration = foundCode.duration || 30;
+    } else {
+        AppState.examDuration = 30;
     }
     
     prepareQuestions();
     
     // Use duration from code, default to 30 minutes
-    const totalMinutes = AppState.examDuration || 30;
+    const totalMinutes = AppState.examDuration;
     AppState.timeRemaining = totalMinutes * 60;
     AppState.isPaused = false;
     
