@@ -912,6 +912,27 @@ main {
     font-weight: 600;
 }
 
+.admin-table .subjects-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.admin-table .subject-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.admin-table .no-subjects {
+    color: var(--text-light);
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
 .status-badge {
     padding: 4px 12px;
     border-radius: 12px;
@@ -988,6 +1009,32 @@ main {
     
     .admin-table td:last-child::before {
         display: none;
+    }
+    
+    .admin-table td[data-label="Subjects"] {
+        text-align: left;
+    }
+    
+    .admin-table td[data-label="Subjects"] .subjects-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: flex-start;
+    }
+    
+    .admin-table td[data-label="Subjects"] .subject-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    
+    .admin-table td[data-label="Subjects"] .no-subjects {
+        color: var(--text-light);
+        font-style: italic;
+        font-size: 0.85rem;
     }
     
     /* Mobile-friendly dropdown */

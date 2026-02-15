@@ -1425,12 +1425,30 @@ function renderSubjectsTab() {
     let html = '';
     AppState.subjects.forEach((subject, index) => {
         const questionCount = subject.questions ? subject.questions.length : 0;
+        
+        // Format date and time separately
+        let dateDisplay = 'N/A';
+        let timeDisplay = '';
+        if (subject.createdAt) {
+            const dateObj = new Date(subject.createdAt);
+            dateDisplay = dateObj.toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+            timeDisplay = dateObj.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+        
         html += `
             <div class="subject-admin-card">
                 <div class="subject-info">
                     <h3>${subject.name}</h3>
                     <p>📚 Questions: <strong>${questionCount}</strong></p>
-                    <p>📅 Created: ${subject.createdAt || 'N/A'}</p>
+                    <p>📅 Last Edited: ${dateDisplay}</p>
+                    <p>🕐 Time: ${timeDisplay}</p>
                 </div>
                 <div class="subject-actions">
                     <button class="btn btn-sm" style="background: #3498db; color: white;" onclick="editSubject(${index})">✏️ Edit</button>
@@ -1873,6 +1891,9 @@ function saveSubjectEdit(index) {
     // Update subject name
     AppState.subjects[index].name = newName;
     
+    // Update timestamp to reflect last edited time
+    AppState.subjects[index].createdAt = new Date().toISOString();
+    
     // Update allQuestions with new key
     if (oldSubject.name !== newName) {
         AppState.allQuestions[newName] = AppState.allQuestions[oldSubject.name] || [];
@@ -2040,6 +2061,10 @@ function saveQuestion(subjectIndex) {
     };
     
     AppState.subjects[subjectIndex].questions.push(newQuestion);
+    
+    // Update subject's last edited timestamp
+    AppState.subjects[subjectIndex].createdAt = new Date().toISOString();
+    
     localStorage.setItem('quizSubjects', JSON.stringify(AppState.subjects));
     
     // Update allQuestions
@@ -2121,6 +2146,9 @@ function saveQuestionEdit(subjectIndex, questionIndex) {
         options: options,
         correctAnswer: correctAnswer
     };
+    
+    // Update subject's last edited timestamp
+    AppState.subjects[subjectIndex].createdAt = new Date().toISOString();
     
     localStorage.setItem('quizSubjects', JSON.stringify(AppState.subjects));
     
@@ -2454,7 +2482,15 @@ function renderCodesTable() {
         
         const status = isExpired ? 'Expired' : (code.active ? 'Active' : 'Inactive');
         const statusClass = isExpired ? 'expired' : (code.active ? 'active' : 'inactive');
-        const subjectsList = code.subjects ? code.subjects.join(', ') : 'None';
+        
+        // Format subjects with badges for mobile, comma-separated for desktop
+        let subjectsDisplay = '';
+        if (code.subjects && code.subjects.length > 0) {
+            subjectsDisplay = code.subjects.map(s => `<span class="subject-badge">${s}</span>`).join('');
+        } else {
+            subjectsDisplay = '<span class="no-subjects">None</span>';
+        }
+        
         const duration = code.duration ? code.duration + ' min' : '30 min';
         const questionsPerSubject = code.questionsPerSubject || 5;
         const validityDisplay = code.validityHours ? code.validityHours + ' hours' : '24 hours';
@@ -2463,7 +2499,7 @@ function renderCodesTable() {
         tr.innerHTML = `
             <td data-label="Code"><strong>${code.code}</strong></td>
             <td data-label="Status"><span class="status-badge ${statusClass}">${status}</span></td>
-            <td data-label="Subjects">${subjectsList}</td>
+            <td data-label="Subjects"><div class="subjects-list">${subjectsDisplay}</div></td>
             <td data-label="Duration">${duration}</td>
             <td data-label="Valid Hours">${validityDisplay}</td>
             <td data-label="Questions">${questionsPerSubject}</td>
