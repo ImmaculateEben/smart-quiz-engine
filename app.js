@@ -2363,40 +2363,40 @@ function showCodeSubjectModal() {
     const subjects = AppState.subjects.map(s => s.name);
     
     let modalHtml = `
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="closeCodeModal(event)">
-            <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%;">
-                <h2 style="margin-bottom: 15px; color: var(--primary-color);">Generate New Code</h2>
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px;" onclick="closeCodeModal(event)">
+            <div style="background: white; border-radius: 12px; padding: 25px 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;">
+                <h2 style="margin-bottom: 20px; color: var(--primary-color); font-size: 1.3rem;">Generate New Code</h2>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div>
+                <div class="code-form-grid">
+                    <div class="form-group">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600;">Duration (min)</label>
-                        <input type="number" id="newCodeDuration" value="30" min="5" max="180" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px;">
+                        <input type="number" id="newCodeDuration" value="30" min="5" max="180" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 6px;">
                     </div>
-                    <div>
+                    <div class="form-group">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600;">Questions/Subject</label>
-                        <input type="number" id="newCodeQuestions" value="5" min="1" max="20" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px;">
+                        <input type="number" id="newCodeQuestions" value="5" min="1" max="20" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 6px;">
                     </div>
-                    <div>
+                    <div class="form-group">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600;">Valid (hours)</label>
-                        <input type="number" id="newCodeValidity" value="24" min="1" max="720" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px;" title="How many hours the code remains valid">
+                        <input type="number" id="newCodeValidity" value="24" min="1" max="720" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 6px;" title="How many hours the code remains valid">
                     </div>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
-                        <input type="checkbox" id="newCodeReview" checked>
-                        <span>Allow students to review answers before submitting</span>
+                    <label style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                        <input type="checkbox" id="newCodeReview" checked style="margin-top: 3px;">
+                        <span style="font-size: 0.9rem;">Allow students to review answers before submitting</span>
                     </label>
                 </div>
                 
-                <p style="margin-bottom: 10px; color: var(--text-light);">Select subjects for this exam code:</p>
+                <p style="margin-bottom: 10px; color: var(--text-light); font-size: 0.95rem;">Select subjects for this exam code:</p>
                 
-                <div id="codeSubjectList" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;">
+                <div id="codeSubjectList" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
     `;
     
     subjects.forEach(subject => {
         modalHtml += `
-            <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; cursor: pointer;">
+            <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; cursor: pointer;">
                 <input type="checkbox" value="${subject}" checked>
                 <span>${subject}</span>
             </label>
@@ -2406,9 +2406,9 @@ function showCodeSubjectModal() {
     modalHtml += `
                 </div>
                 
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="closeCodeModal()" style="flex: 1; padding: 12px; background: var(--border-color); border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
-                    <button onclick="confirmGenerateCode()" style="flex: 1; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer;">Generate Code</button>
+                <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <button onclick="confirmGenerateCode()" style="padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">Generate Code</button>
+                    <button onclick="closeCodeModal()" style="padding: 12px; background: var(--border-color); border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem;">Cancel</button>
                 </div>
             </div>
         </div>

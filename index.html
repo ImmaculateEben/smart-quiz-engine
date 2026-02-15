@@ -23,20 +23,135 @@
         <main id="app">
             <!-- Screen 1: Landing / Login Selection -->
             <section id="landingScreen" class="screen active">
-                <div class="welcome-card">
-                    <h2>Welcome to Smart Quiz Engine</h2>
-                    <p class="subtitle">Entrance Examination Portal</p>
+                <!-- Hero Section -->
+                <div class="landing-hero">
+                    <div class="hero-content">
+                        <div class="hero-icon">🎓</div>
+                        <h1>Smart Quiz Engine</h1>
+                        <p class="hero-subtitle">Entrance Examination Portal</p>
+                        <p class="hero-description">
+                            Experience a seamless online examination system designed for efficiency and fairness.<br>
+                            Take your exams from anywhere with our secure and user-friendly platform.
+                        </p>
+                        <div class="hero-buttons">
+                            <button class="btn btn-primary btn-large" onclick="showScreen('loginScreen')">
+                                <span class="btn-icon">🎯</span>
+                                Start Exam
+                            </button>
+                            <button class="btn btn-secondary btn-large" id="adminLink" onclick="showScreen('adminLoginScreen')">
+                                <span class="btn-icon">🔐</span>
+                                Admin Panel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Features Section 1: Everything You Need for Online Exams -->
+                <div class="landing-section">
+                    <h2 class="section-title">Everything You Need for Online Exams</h2>
+                    <p class="section-subtitle">A comprehensive platform built for educational institutions and organizations.</p>
+                    
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <div class="feature-icon">🔒</div>
+                            <div class="feature-content">
+                                <h3>Secure & Fair</h3>
+                                <p>Anti-cheating measures, encrypted submissions, and randomized question pools ensure exam integrity.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">⏱️</div>
+                            <div class="feature-content">
+                                <h3>Real-time Timer</h3>
+                                <p>Automated countdown timer with auto-submission keeps every candidate on a level playing field.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">📱</div>
+                            <div class="feature-content">
+                                <h3>Access Anywhere</h3>
+                                <p>Take exams from any device with a browser. No software installation required.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-content">
+                                <h3>Instant Results</h3>
+                                <p>Automated grading with detailed score breakdowns available immediately after submission.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">👥</div>
+                            <div class="feature-content">
+                                <h3>Bulk Management</h3>
+                                <p>Register and manage thousands of candidates effortlessly with batch import tools.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">📜</div>
+                            <div class="feature-content">
+                                <h3>Certification</h3>
+                                <p>Generate digital certificates and merit lists automatically upon exam completion.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Features Section 2: How It Works -->
+                <div class="landing-section how-it-works">
+                    <h2 class="section-title">How It Works</h2>
+                    <p class="section-subtitle">Simple 4-Step Process</p>
+                    
+                    <div class="steps-container">
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Enter Exam Code</h3>
+                                <p>Students enter their unique exam code to access the examination.</p>
+                            </div>
+                        </div>
+                        <div class="step-connector"></div>
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Register Details</h3>
+                                <p>Fill in your personal information and verify your identity.</p>
+                            </div>
+                        </div>
+                        <div class="step-connector"></div>
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Take the Exam</h3>
+                                <p>Answer questions within the allocated time. Auto-save ensures no progress is lost.</p>
+                            </div>
+                        </div>
+                        <div class="step-connector"></div>
+                        <div class="step-card">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3>View Results</h3>
+                                <p>Get instant results with detailed score analysis and feedback.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CTA Section (hidden - buttons now in hero) -->
+                <!-- <div class="welcome-card landing-cta">
+                    <h2>Ready to Begin?</h2>
+                    <p class="subtitle">Select your login type to continue</p>
                     <div class="welcome-options">
-                        <button class="btn btn-primary" onclick="showScreen('loginScreen')">
-                            <span class="btn-icon">📝</span>
-                            Student Login
+                        <button class="btn btn-primary btn-large" onclick="showScreen('loginScreen')">
+                            <span class="btn-icon">🎯</span>
+                            Start Exam
                         </button>
-                        <button class="btn btn-secondary" id="adminLink" onclick="showScreen('adminLoginScreen')">
+                        <button class="btn btn-secondary btn-large" id="adminLink" onclick="showScreen('adminLoginScreen')">
                             <span class="btn-icon">🔐</span>
                             Admin Panel
                         </button>
                     </div>
-                </div>
+                </div> -->
             </section>
 
             <!-- Screen 2: User Registration -->
@@ -374,6 +489,7 @@
         <!-- Footer -->
         <footer class="footer">
             <p>&copy; 2024 Smart Quiz Engine. All rights reserved.</p>
+            <p>Developed by <a href="https://immaculatedesigns.com.ng" target="_blank" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Immaculate Designs</a></p>
         </footer>
     </div>
 
