@@ -2461,13 +2461,13 @@ function renderCodesTable() {
         
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong>${code.code}</strong></td>
-            <td><span class="status-badge ${statusClass}">${status}</span></td>
-            <td>${subjectsList}</td>
-            <td>${duration}</td>
-            <td>${validityDisplay}</td>
-            <td>${questionsPerSubject}</td>
-            <td style="position: relative;">
+            <td data-label="Code"><strong>${code.code}</strong></td>
+            <td data-label="Status"><span class="status-badge ${statusClass}">${status}</span></td>
+            <td data-label="Subjects">${subjectsList}</td>
+            <td data-label="Duration">${duration}</td>
+            <td data-label="Valid Hours">${validityDisplay}</td>
+            <td data-label="Questions">${questionsPerSubject}</td>
+            <td data-label="Actions" style="position: relative;">
                 <button class="action-btn" onclick="toggleCodeDropdown(${index})" style="background: var(--primary-color); color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
                     ⋮
                 </button>
