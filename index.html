@@ -34,7 +34,7 @@
                             Take your exams from anywhere with our secure and user-friendly platform.
                         </p>
                         <div class="hero-buttons">
-                            <button class="btn btn-primary btn-large" onclick="showScreen('loginScreen')">
+                            <button class="btn btn-primary btn-large" onclick="showScreen('pinEntryScreen')">
                                 <span class="btn-icon">🎯</span>
                                 Start Exam
                             </button>
@@ -187,7 +187,7 @@
                     <h2>Ready to Begin?</h2>
                     <p class="subtitle">Select your login type to continue</p>
                     <div class="welcome-options">
-                        <button class="btn btn-primary btn-large" onclick="showScreen('loginScreen')">
+                        <button class="btn btn-primary btn-large" onclick="showScreen('pinEntryScreen')">
                             <span class="btn-icon">🎯</span>
                             Start Exam
                         </button>
@@ -197,6 +197,24 @@
                         </button>
                     </div>
                 </div> -->
+            </section>
+
+            <!-- PIN Entry Screen - First step before any form -->
+            <section id="pinEntryScreen" class="screen">
+                <div class="form-card">
+                    <h2>Enter Exam PIN</h2>
+                    <p class="form-subtitle">Enter the exam PIN provided by your institution</p>
+                    <form id="pinEntryForm" onsubmit="handlePinEntry(event)">
+                        <div class="form-group">
+                            <label for="entryExamCode">Exam PIN *</label>
+                            <input type="text" id="entryExamCode" required placeholder="Enter exam PIN" maxlength="10" autocomplete="off">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" onclick="showScreen('landingScreen')">Back</button>
+                            <button type="submit" class="btn btn-primary">Verify PIN</button>
+                        </div>
+                    </form>
+                </div>
             </section>
 
             <!-- Screen 2: User Registration -->
@@ -226,7 +244,7 @@
                             <input type="text" id="examCode" required placeholder="Enter your exam code" maxlength="10">
                         </div>
                         <div class="form-actions">
-                            <button type="button" class="btn btn-outline" onclick="showScreen('landingScreen')">Back</button>
+                            <button type="button" class="btn btn-outline" onclick="showScreen('pinEntryScreen')">Back</button>
                             <button type="submit" class="btn btn-primary">Continue</button>
                         </div>
                     </form>

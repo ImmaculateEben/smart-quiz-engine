@@ -52,7 +52,8 @@ const AppState = {
 // State Machine transitions
 const StateMachine = {
     transitions: {
-        'landing': ['login', 'adminLogin'],
+        'landing': ['pinEntry', 'login', 'adminLogin'],
+        'pinEntry': ['login', 'landing'],
         'login': ['codeVerification', 'landing'],
         'codeVerification': ['instructions', 'login'],
         'instructions': ['quiz', 'login'],
@@ -93,14 +94,15 @@ function showScreen(screenId) {
         targetScreen.classList.add('active');
     }
     
-    // Hide user info on login screen
-    if (screenId === 'loginScreen' || screenId === 'landingScreen') {
+    // Hide user info on login and PIN entry screens
+    if (screenId === 'loginScreen' || screenId === 'landingScreen' || screenId === 'pinEntryScreen') {
         document.getElementById('userInfo').style.display = 'none';
     }
     
     // Update state
     const stateMap = {
         'landingScreen': 'landing',
+        'pinEntryScreen': 'pinEntry',
         'loginScreen': 'login',
         'codeVerificationScreen': 'codeVerification',
         'subjectSelectionScreen': 'subjectSelection',
@@ -117,6 +119,71 @@ function showScreen(screenId) {
 
 // ============================================
 // USER REGISTRATION & CODE VERIFICATION
+// ============================================
+// REGISTRATION & PIN ENTRY
+// ============================================
+
+// Handle PIN Entry (first step before form)
+function handlePinEntry(event) {
+    event.preventDefault();
+    
+    const codeInput = document.getElementById('entryExamCode');
+    const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+    
+    if (!code) {
+        alert('Please enter an exam PIN.');
+        return;
+    }
+    
+    // Load codes to verify
+    loadCodes();
+    loadSubjects();
+    
+    // Find the code in our database
+    const foundCode = AppState.codes.find(c => c.code === code && c.active);
+    
+    if (foundCode) {
+        // Check if code validity period has expired
+        const validityHours = foundCode.validityHours || 24;
+        const createdAt = new Date(foundCode.createdAt);
+        const now = new Date();
+        const hoursPassed = (now - createdAt) / (1000 * 60 * 60);
+        
+        if (hoursPassed > validityHours) {
+            alert('This exam PIN has expired. Please contact your administrator for a new PIN.');
+            return;
+        }
+        
+        // Check if code has subjects assigned
+        if (!foundCode.subjects || foundCode.subjects.length === 0) {
+            alert('This exam PIN does not have any subjects assigned. Please contact your administrator.');
+            return;
+        }
+        
+        // Store exam code in user state
+        AppState.user.examCode = code;
+        
+        // Get subjects from the code
+        AppState.selectedSubjects = foundCode.subjects;
+        
+        // Get other settings from code
+        AppState.questionsPerSubject = foundCode.questionsPerSubject || 5;
+        AppState.allowReview = foundCode.allowReview !== false;
+        AppState.examDuration = foundCode.duration || 30;
+        
+        // Now show the student registration form with PIN pre-filled
+        document.getElementById('examCode').value = code;
+        document.getElementById('examCode').readOnly = true;
+        
+        // Clear the PIN entry field
+        document.getElementById('entryExamCode').value = '';
+        
+        showScreen('loginScreen');
+    } else {
+        alert('Invalid exam PIN. Please check and try again.');
+    }
+}
+
 // ============================================
 function handleRegistration(event) {
     event.preventDefault();
@@ -295,6 +362,9 @@ function prepareQuestions() {
         loadSubjects();
     }
     
+    console.log('prepareQuestions - selectedSubjects:', AppState.selectedSubjects);
+    console.log('prepareQuestions - allQuestions:', AppState.allQuestions);
+    
     // Initialize scores for each subject
     AppState.selectedSubjects.forEach(subject => {
         AppState.scores[subject] = {
@@ -307,6 +377,8 @@ function prepareQuestions() {
     // Get random questions for each selected subject
     AppState.selectedSubjects.forEach(subject => {
         const subjectQuestions = [...(AppState.allQuestions[subject] || [])];
+        
+        console.log('prepareQuestions - subject:', subject, 'questions count:', subjectQuestions.length);
         
         // Shuffle questions
         shuffleArray(subjectQuestions);
