@@ -823,6 +823,74 @@ function skipQuestion() {
 }
 
 // ============================================
+// STOP EXAM & LOGOUT
+// ============================================
+function stopExam() {
+    const confirmed = confirm('⚠️ WARNING: Stop Exam?\n\nYour exam will be submitted immediately with all your current answers.\n\nAre you sure you want to stop the exam?');
+    
+    if (confirmed) {
+        submitQuiz();
+    }
+}
+
+function logoutExam() {
+    const confirmed = confirm('⚠️ WARNING: Logout?\n\nYour exam will be submitted and you will be logged out.\n\nAre you sure you want to logout?');
+    
+    if (confirmed) {
+        // Submit the quiz first
+        submitQuiz();
+        
+        // Then do the logout
+        performLogout();
+    }
+}
+
+function performLogout() {
+    // Clear timer
+    clearInterval(AppState.timer);
+    
+    // Reset quiz state
+    AppState.currentQuestionIndex = 0;
+    AppState.questions = [];
+    AppState.userAnswers = [];
+    AppState.scores = {};
+    AppState.isPaused = false;
+    AppState.selectedSubjects = [];
+    
+    // Clear user data
+    AppState.user = {
+        fullName: '',
+        email: '',
+        phone: '',
+        school: '',
+        examCode: ''
+    };
+    
+    // Clear localStorage
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('examSession');
+    
+    // Reset UI
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('userName').textContent = '';
+    
+    // Reset form
+    const regForm = document.getElementById('registrationForm');
+    if (regForm) {
+        regForm.reset();
+    }
+    
+    // Make exam code editable again
+    const examCodeField = document.getElementById('examCode');
+    if (examCodeField) {
+        examCodeField.readOnly = false;
+    }
+    
+    // Go to landing
+    showScreen('landingScreen');
+}
+
+// ============================================
 // QUIZ SUBMISSION & SCORING
 // ============================================
 function submitQuiz() {

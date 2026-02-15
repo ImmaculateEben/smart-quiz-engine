@@ -447,7 +447,25 @@ main {
 
 .quiz-actions-bar {
     margin-bottom: 20px;
-    text-align: right;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quiz-actions-right {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-danger {
+    background-color: var(--error-color);
+    color: white;
+    border: 2px solid var(--error-color);
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
 }
 
 .question-card h3 {
