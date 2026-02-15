@@ -366,6 +366,21 @@ function startQuiz() {
         return;
     }
     
+    // Load questions
+    loadSubjects();
+    
+    // Check if there are questions available
+    let totalAvailableQuestions = 0;
+    AppState.selectedSubjects.forEach(subject => {
+        const subjectQuestions = AppState.allQuestions[subject] || [];
+        totalAvailableQuestions += subjectQuestions.length;
+    });
+    
+    if (totalAvailableQuestions === 0) {
+        alert('No questions available for the selected subjects. Please contact your administrator to add questions.');
+        return;
+    }
+    
     // Ensure we have duration
     const foundCode = AppState.codes.find(c => c.code === AppState.user.examCode);
     if (foundCode) {
@@ -375,6 +390,12 @@ function startQuiz() {
     }
     
     prepareQuestions();
+    
+    // Check if questions were prepared
+    if (AppState.questions.length === 0) {
+        alert('Not enough questions available. Please contact your administrator.');
+        return;
+    }
     
     // Use duration from code, default to 30 minutes
     const totalMinutes = AppState.examDuration;
