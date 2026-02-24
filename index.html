@@ -371,6 +371,39 @@
                     </div>
                 </div>
 
+                <div class="quiz-enhancements" id="quizEnhancements">
+                    <div class="quiz-enhance-toolbar">
+                        <button type="button" class="btn btn-outline btn-sm" id="flagQuestionBtn" onclick="toggleCurrentQuestionFlag()">Flag Question</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="togglePaletteBtn" onclick="toggleQuizPalette()">Hide Palette</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="focusModeBtn" onclick="toggleQuizFocusMode()">Focus Mode</button>
+                        <span class="quiz-shortcut-hint">Shortcuts: 1-4 answer, ←/→ move, F flag</span>
+                    </div>
+                    <div class="quiz-overview-grid">
+                        <div class="quiz-stat-card">
+                            <span class="quiz-stat-label">Answered</span>
+                            <span class="quiz-stat-value" id="quizAnsweredCount">0</span>
+                        </div>
+                        <div class="quiz-stat-card">
+                            <span class="quiz-stat-label">Remaining</span>
+                            <span class="quiz-stat-value" id="quizRemainingCount">0</span>
+                        </div>
+                        <div class="quiz-stat-card">
+                            <span class="quiz-stat-label">Flagged</span>
+                            <span class="quiz-stat-value" id="quizFlaggedCount">0</span>
+                        </div>
+                        <div class="quiz-stat-card quiz-stat-card-wide" id="quizPalettePanel">
+                            <div class="quiz-stat-card-header">
+                                <span class="quiz-stat-label">Question Navigator</span>
+                                <span class="quiz-palette-legend">
+                                    <span class="legend-dot answered"></span> Answered
+                                    <span class="legend-dot flagged"></span> Flagged
+                                </span>
+                            </div>
+                            <div class="question-palette" id="questionPalette"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="question-card">
                     <h3 id="questionText">Question text goes here</h3>
                     <div class="options-container" id="optionsContainer">
@@ -424,6 +457,10 @@
                             <option value="Chemistry">Chemistry</option>
                         </select>
                     </div>
+                    <div class="review-search">
+                        <input type="search" id="reviewSearchInput" placeholder="Search by question text or answer..." oninput="filterReview()">
+                    </div>
+                    <div class="review-summary" id="reviewSummary"></div>
                 </div>
                 <div class="review-container" id="reviewContainer">
                     <!-- Review items will be inserted here -->

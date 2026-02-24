@@ -3307,3 +3307,476 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('adminLink').style.display = 'block';
     }
 });
+
+// ============================================
+// UX ENHANCEMENTS (2026 upgrade layer)
+// ============================================
+function ensureEnhancedQuizState() {
+    if (!AppState.flaggedQuestions || typeof AppState.flaggedQuestions !== 'object') {
+        AppState.flaggedQuestions = {};
+    }
+
+    if (!AppState.quizStartedAt) {
+        AppState.quizStartedAt = null;
+    }
+
+    // Old sessions may restore an empty array, which breaks displayQuestion() because [] is truthy.
+    if (Array.isArray(AppState.subjectQuestions) && AppState.subjectQuestions.length === 0) {
+        AppState.subjectQuestions = null;
+    }
+}
+
+function hydrateEnhancedSessionState() {
+    ensureEnhancedQuizState();
+    try {
+        const sessionRaw = localStorage.getItem('examSession');
+        if (!sessionRaw) return;
+        const session = JSON.parse(sessionRaw);
+        if (session && session.flaggedQuestions && typeof session.flaggedQuestions === 'object') {
+            AppState.flaggedQuestions = session.flaggedQuestions;
+        }
+        if (session && session.quizStartedAt) {
+            AppState.quizStartedAt = session.quizStartedAt;
+        }
+    } catch (error) {
+        console.warn('Unable to hydrate enhanced quiz session state', error);
+    }
+}
+
+function syncCurrentSubjectContextFromIndex() {
+    const question = AppState.questions && AppState.questions[AppState.currentQuestionIndex];
+    if (!question) return;
+
+    AppState.currentSubject = question.subject || AppState.currentSubject;
+    if (Array.isArray(AppState.selectedSubjects)) {
+        const subjectIndex = AppState.selectedSubjects.indexOf(question.subject);
+        if (subjectIndex >= 0) {
+            AppState.currentSubjectIndex = subjectIndex;
+        }
+    }
+}
+
+function getQuestionByIndex(index) {
+    if (!Array.isArray(AppState.questions)) return null;
+    return AppState.questions[index] || null;
+}
+
+function isQuestionAnswered(index) {
+    const answer = AppState.userAnswers && AppState.userAnswers[index];
+    return !!(answer && answer.selectedOption !== null && answer.selectedOption !== undefined);
+}
+
+function isQuestionFlagged(index) {
+    ensureEnhancedQuizState();
+    return !!AppState.flaggedQuestions[index];
+}
+
+function countAnsweredQuestions() {
+    if (!Array.isArray(AppState.userAnswers)) return 0;
+    return AppState.userAnswers.filter(a => a && a.selectedOption !== null && a.selectedOption !== undefined).length;
+}
+
+function renderQuestionPalette() {
+    const palette = document.getElementById('questionPalette');
+    if (!palette || !Array.isArray(AppState.questions) || AppState.questions.length === 0) return;
+
+    palette.innerHTML = '';
+
+    AppState.questions.forEach((question, index) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'palette-btn';
+        btn.textContent = String(index + 1);
+        btn.title = `${question.subject || 'General'} - Question ${index + 1}`;
+
+        if (index === AppState.currentQuestionIndex) btn.classList.add('current');
+        if (isQuestionAnswered(index)) btn.classList.add('answered');
+        if (isQuestionFlagged(index)) btn.classList.add('flagged');
+        if (index === 0 || AppState.questions[index - 1].subject !== question.subject) {
+            btn.classList.add('subject-start');
+        }
+
+        btn.addEventListener('click', function() {
+            jumpToQuestion(index);
+        });
+
+        palette.appendChild(btn);
+    });
+}
+
+function syncQuizStatsPanel() {
+    const total = Array.isArray(AppState.questions) ? AppState.questions.length : 0;
+    const answered = countAnsweredQuestions();
+    ensureEnhancedQuizState();
+    const remaining = Math.max(0, total - answered);
+
+    const answeredEl = document.getElementById('quizAnsweredCount');
+    const remainingEl = document.getElementById('quizRemainingCount');
+    const flaggedEl = document.getElementById('quizFlaggedCount');
+    if (answeredEl) answeredEl.textContent = String(answered);
+    if (remainingEl) remainingEl.textContent = String(remaining);
+    if (flaggedEl) flaggedEl.textContent = String(Object.values(AppState.flaggedQuestions || {}).filter(Boolean).length);
+
+    const flagBtn = document.getElementById('flagQuestionBtn');
+    if (flagBtn) {
+        const flaggedCurrent = isQuestionFlagged(AppState.currentQuestionIndex);
+        flagBtn.textContent = flaggedCurrent ? 'Unflag Question' : 'Flag Question';
+        flagBtn.classList.toggle('btn-danger', flaggedCurrent);
+    }
+
+    const subjectBadge = document.getElementById('currentSubject');
+    if (subjectBadge) {
+        let marker = document.getElementById('flaggedSubjectMarker');
+        if (isQuestionFlagged(AppState.currentQuestionIndex)) {
+            if (!marker) {
+                marker = document.createElement('span');
+                marker.id = 'flaggedSubjectMarker';
+                marker.className = 'quiz-flagged-indicator';
+                marker.textContent = 'FLAGGED';
+                subjectBadge.insertAdjacentElement('afterend', marker);
+            }
+        } else if (marker) {
+            marker.remove();
+        }
+    }
+}
+
+function syncEnhancedQuizUI() {
+    ensureEnhancedQuizState();
+    if (!document.getElementById('quizScreen')) return;
+    renderQuestionPalette();
+    syncQuizStatsPanel();
+}
+
+function jumpToQuestion(index) {
+    if (!Array.isArray(AppState.questions) || index < 0 || index >= AppState.questions.length) return;
+    AppState.currentQuestionIndex = index;
+    syncCurrentSubjectContextFromIndex();
+    displayQuestion();
+    if (typeof saveExamSession === 'function') saveExamSession();
+}
+
+function toggleCurrentQuestionFlag() {
+    ensureEnhancedQuizState();
+    const idx = AppState.currentQuestionIndex;
+    if (idx === undefined || idx === null) return;
+    AppState.flaggedQuestions[idx] = !AppState.flaggedQuestions[idx];
+    if (!AppState.flaggedQuestions[idx]) {
+        delete AppState.flaggedQuestions[idx];
+    }
+    syncEnhancedQuizUI();
+    if (typeof saveExamSession === 'function') saveExamSession();
+}
+
+function toggleQuizPalette() {
+    const screen = document.getElementById('quizScreen');
+    if (!screen) return;
+    screen.classList.toggle('palette-collapsed');
+    const btn = document.getElementById('togglePaletteBtn');
+    if (btn) {
+        btn.textContent = screen.classList.contains('palette-collapsed') ? 'Show Palette' : 'Hide Palette';
+    }
+}
+
+function toggleQuizFocusMode() {
+    const screen = document.getElementById('quizScreen');
+    if (!screen) return;
+    screen.classList.toggle('focus-mode');
+    const btn = document.getElementById('focusModeBtn');
+    if (btn) {
+        btn.textContent = screen.classList.contains('focus-mode') ? 'Exit Focus' : 'Focus Mode';
+    }
+}
+
+function ensureThemeToggleButton() {
+    if (document.getElementById('themeToggleFab')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'themeToggleFab';
+    btn.className = 'theme-toggle-fab';
+    btn.title = 'Toggle theme';
+    btn.textContent = 'Mode';
+    btn.addEventListener('click', toggleTheme);
+    document.body.appendChild(btn);
+}
+
+function applySavedTheme() {
+    const saved = localStorage.getItem('smartQuizTheme');
+    if (saved === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+    } else {
+        document.body.removeAttribute('data-theme');
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('smartQuizTheme', 'light');
+    } else {
+        document.body.setAttribute('data-theme', 'dark');
+        localStorage.setItem('smartQuizTheme', 'dark');
+    }
+}
+
+function buildDynamicReviewFilterOptions() {
+    const select = document.getElementById('reviewFilter');
+    if (!select) return;
+
+    const selectedValue = select.value || 'all';
+    const subjects = Array.from(new Set((AppState.questions || []).map(q => q.subject).filter(Boolean)));
+
+    select.innerHTML = `
+        <option value="all">All Questions</option>
+        <option value="correct">Correct Only</option>
+        <option value="incorrect">Incorrect Only</option>
+    `;
+
+    subjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        select.appendChild(option);
+    });
+
+    if (Array.from(select.options).some(o => o.value === selectedValue)) {
+        select.value = selectedValue;
+    }
+}
+
+function applyReviewSearchFilter() {
+    const input = document.getElementById('reviewSearchInput');
+    const term = (input && input.value ? input.value : '').trim().toLowerCase();
+    const items = Array.from(document.querySelectorAll('#reviewContainer .review-item'));
+
+    let visibleCount = 0;
+    items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const visible = !term || text.includes(term);
+        item.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+    });
+
+    updateReviewSummary(visibleCount, items.length);
+}
+
+function updateReviewSummary(visibleCount, totalRendered) {
+    const summary = document.getElementById('reviewSummary');
+    if (!summary) return;
+
+    const total = Array.isArray(AppState.questions) ? AppState.questions.length : 0;
+    const answered = countAnsweredQuestions();
+    const flagged = Object.values(AppState.flaggedQuestions || {}).filter(Boolean).length;
+
+    summary.innerHTML = `
+        <span class="review-summary-pill">Visible: ${visibleCount}/${totalRendered}</span>
+        <span class="review-summary-pill">Answered: ${answered}/${total}</span>
+        <span class="review-summary-pill">Flagged: ${flagged}</span>
+    `;
+}
+
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+}
+
+function renderResultMetaStats() {
+    const resultCard = document.querySelector('#quizCompleteScreen .score-display');
+    if (!resultCard) return;
+
+    let wrap = document.getElementById('resultMetaStats');
+    if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.id = 'resultMetaStats';
+        wrap.className = 'result-meta-stats';
+        resultCard.insertAdjacentElement('afterend', wrap);
+    }
+
+    const totalQuestions = Array.isArray(AppState.questions) ? AppState.questions.length : 0;
+    const answered = countAnsweredQuestions();
+    const flagged = Object.values(AppState.flaggedQuestions || {}).filter(Boolean).length;
+    const totalSeconds = Math.max(0, (AppState.examDuration || 0) * 60);
+    const usedSeconds = Math.max(0, totalSeconds - (AppState.timeRemaining || 0));
+
+    wrap.innerHTML = `
+        <div class="result-meta-item"><span class="label">Answered</span><span class="value">${answered}/${totalQuestions}</span></div>
+        <div class="result-meta-item"><span class="label">Unanswered</span><span class="value">${Math.max(0, totalQuestions - answered)}</span></div>
+        <div class="result-meta-item"><span class="label">Flagged</span><span class="value">${flagged}</span></div>
+        <div class="result-meta-item"><span class="label">Time Used</span><span class="value">${formatDuration(usedSeconds)}</span></div>
+    `;
+}
+
+function handleQuizKeyboardShortcuts(event) {
+    const quizScreen = document.getElementById('quizScreen');
+    if (!quizScreen || !quizScreen.classList.contains('active')) return;
+
+    const tag = (event.target && event.target.tagName ? event.target.tagName : '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || event.target.isContentEditable) return;
+
+    if (event.key >= '1' && event.key <= '4') {
+        const optionIndex = Number(event.key) - 1;
+        const currentQuestion = getQuestionByIndex(AppState.currentQuestionIndex);
+        if (currentQuestion && Array.isArray(currentQuestion.options) && optionIndex < currentQuestion.options.length) {
+            event.preventDefault();
+            selectOption(optionIndex);
+        }
+        return;
+    }
+
+    if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        nextQuestion();
+        return;
+    }
+
+    if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        prevQuestion();
+        return;
+    }
+
+    if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        toggleCurrentQuestionFlag();
+    }
+}
+
+// Wrap persistence so enhanced state survives refresh/resume.
+const __originalSaveExamSession = saveExamSession;
+saveExamSession = function() {
+    ensureEnhancedQuizState();
+    __originalSaveExamSession.apply(this, arguments);
+    try {
+        const raw = localStorage.getItem('examSession');
+        if (!raw) return;
+        const session = JSON.parse(raw);
+        session.flaggedQuestions = AppState.flaggedQuestions || {};
+        session.quizStartedAt = AppState.quizStartedAt || session.quizStartedAt || new Date().toISOString();
+        localStorage.setItem('examSession', JSON.stringify(session));
+    } catch (error) {
+        console.warn('Unable to save enhanced quiz session state', error);
+    }
+};
+
+// Wrap question display to keep enhanced UI synced.
+const __originalDisplayQuestion = displayQuestion;
+displayQuestion = function() {
+    ensureEnhancedQuizState();
+    syncCurrentSubjectContextFromIndex();
+    const result = __originalDisplayQuestion.apply(this, arguments);
+    syncEnhancedQuizUI();
+    return result;
+};
+
+const __originalSelectOption = selectOption;
+selectOption = function() {
+    const result = __originalSelectOption.apply(this, arguments);
+    syncEnhancedQuizUI();
+    return result;
+};
+
+const __originalStartQuiz = startQuiz;
+startQuiz = function() {
+    ensureEnhancedQuizState();
+    AppState.flaggedQuestions = {};
+    AppState.quizStartedAt = new Date().toISOString();
+    const result = __originalStartQuiz.apply(this, arguments);
+    setTimeout(syncEnhancedQuizUI, 0);
+    return result;
+};
+
+const __originalSubmitQuiz = submitQuiz;
+submitQuiz = function() {
+    ensureEnhancedQuizState();
+    const result = __originalSubmitQuiz.apply(this, arguments);
+    renderResultMetaStats();
+    return result;
+};
+
+const __originalShowReview = showReview;
+showReview = function() {
+    buildDynamicReviewFilterOptions();
+    const result = __originalShowReview.apply(this, arguments);
+    applyReviewSearchFilter();
+    return result;
+};
+
+const __originalDisplayReviewAnswers = displayReviewAnswers;
+displayReviewAnswers = function() {
+    const result = __originalDisplayReviewAnswers.apply(this, arguments);
+    applyReviewSearchFilter();
+    return result;
+};
+
+// Replace navigation with linear global progression (fixes multi-subject index progression bugs).
+nextQuestion = function() {
+    if (!Array.isArray(AppState.questions) || AppState.questions.length === 0) return;
+
+    const lastIndex = AppState.questions.length - 1;
+    if (AppState.currentQuestionIndex >= lastIndex) {
+        if (AppState.allowReview) {
+            if (confirm('You have answered all questions. Would you like to review your answers before submitting?')) {
+                AppState.currentQuestionIndex = 0;
+                syncCurrentSubjectContextFromIndex();
+                displayQuestion();
+                saveExamSession();
+            } else {
+                submitQuiz();
+            }
+        } else {
+            submitQuiz();
+        }
+        return;
+    }
+
+    AppState.currentQuestionIndex++;
+    syncCurrentSubjectContextFromIndex();
+    displayQuestion();
+    saveExamSession();
+};
+
+prevQuestion = function() {
+    if (!Array.isArray(AppState.questions) || AppState.questions.length === 0) return;
+    if (AppState.currentQuestionIndex <= 0) return;
+    AppState.currentQuestionIndex--;
+    syncCurrentSubjectContextFromIndex();
+    displayQuestion();
+    saveExamSession();
+};
+
+skipQuestion = function() {
+    if (!Array.isArray(AppState.questions) || AppState.questions.length === 0) return;
+    if (AppState.currentQuestionIndex >= AppState.questions.length - 1) return;
+    AppState.currentQuestionIndex++;
+    syncCurrentSubjectContextFromIndex();
+    displayQuestion();
+    saveExamSession();
+};
+
+const __originalStartNewQuiz = startNewQuiz;
+startNewQuiz = function() {
+    const result = __originalStartNewQuiz.apply(this, arguments);
+    AppState.flaggedQuestions = {};
+    AppState.quizStartedAt = null;
+    return result;
+};
+
+const __originalPerformLogout = performLogout;
+performLogout = function() {
+    const result = __originalPerformLogout.apply(this, arguments);
+    AppState.flaggedQuestions = {};
+    AppState.quizStartedAt = null;
+    return result;
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    ensureEnhancedQuizState();
+    hydrateEnhancedSessionState();
+    applySavedTheme();
+    ensureThemeToggleButton();
+    buildDynamicReviewFilterOptions();
+    document.addEventListener('keydown', handleQuizKeyboardShortcuts);
+    setTimeout(syncEnhancedQuizUI, 0);
+});
