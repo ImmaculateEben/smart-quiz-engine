@@ -1,0 +1,13 @@
+{
+  "saveAnswerProbe": {
+    "attemptId": "REPLACE_WITH_EXPIRED_IN_PROGRESS_OR_AUTO_SUBMITTED_ATTEMPT_ID",
+    "examId": "REPLACE_WITH_EXAM_ID_FOR_ATTEMPT",
+    "questionId": "REPLACE_WITH_QUESTION_ID_IN_EXAM",
+    "answerPayload": {
+      "selected": [0]
+    }
+  },
+  "submitProbe": {
+    "attemptId": "REPLACE_WITH_EXPIRED_IN_PROGRESS_ATTEMPT_ID"
+  }
+}

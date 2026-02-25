@@ -1,0 +1,7 @@
+{
+  "examId": "REPLACE_WITH_EXAM_ID",
+  "pin": "REPLACE_WITH_ACTIVE_PIN",
+  "candidateIdentifier": "loadtest-{n}",
+  "candidateName": "Load Test {n}",
+  "startAttempt": false
+}
