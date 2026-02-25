@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "load:pin": "node scripts/load/pin-validate.mjs",
     "load:submit": "node scripts/load/submit-attempt.mjs",
+    "security:answer-key": "node scripts/security/fetch-correct-answers.mjs",
+    "security:cross-tenant": "node scripts/security/cross-tenant-access.mjs",
     "security:replay-submit": "node scripts/security/replay-submit.mjs",
     "security:duplicate-submit": "node scripts/security/duplicate-submit.mjs",
     "security:timer": "node scripts/security/timer-manipulation.mjs"

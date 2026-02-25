@@ -17,7 +17,7 @@ export default async function CandidateExamPage({
     .single();
   if (!attempt) return notFound();
 
-  const [{ data: exam }, { data: candidate }, { data: examQuestions }, { data: questionRows }, { data: answers }] =
+  const [{ data: exam }, { data: candidate }, { data: examQuestions }, { data: answers }] =
     await Promise.all([
       admin
         .from("exams")
@@ -38,11 +38,6 @@ export default async function CandidateExamPage({
         .eq("institution_id", attempt.institution_id)
         .order("display_order", { ascending: true }),
       admin
-        .from("questions")
-        .select("id,question_type,prompt,explanation,options,difficulty,tags")
-        .eq("institution_id", attempt.institution_id)
-        .is("deleted_at", null),
-      admin
         .from("attempt_answers")
         .select("question_id,answer_payload,saved_at,version_no")
         .eq("attempt_id", attempt.id)
@@ -53,8 +48,17 @@ export default async function CandidateExamPage({
 
   const order = Array.isArray(attempt.shuffled_question_order) ? (attempt.shuffled_question_order as string[]) : [];
   const eqMap = new Map((examQuestions ?? []).map((eq) => [eq.question_id, eq]));
-  const qMap = new Map((questionRows ?? []).map((q) => [q.id, q]));
   const orderedQuestionIds = order.length > 0 ? order : (examQuestions ?? []).map((eq) => eq.question_id);
+  const questionIds = [...new Set(orderedQuestionIds.filter((id): id is string => typeof id === "string" && id.length > 0))];
+  const { data: questionRows } = questionIds.length
+    ? await admin
+        .from("questions")
+        .select("id,question_type,prompt,explanation,options,difficulty,tags")
+        .eq("institution_id", attempt.institution_id)
+        .is("deleted_at", null)
+        .in("id", questionIds)
+    : { data: [] as Array<any> };
+  const qMap = new Map((questionRows ?? []).map((q) => [q.id, q]));
   const questions = orderedQuestionIds
     .map((id) => {
       const q = qMap.get(id);

@@ -1,0 +1,5 @@
+{
+  "cookie": "REPLACE_WITH_AUTHENTICATED_ADMIN_COOKIE_FOR_TENANT_A",
+  "foreignExamId": "REPLACE_WITH_EXAM_ID_FROM_TENANT_B",
+  "format": "csv"
+}

@@ -1,0 +1,10 @@
+{
+  "pageProbe": {
+    "attemptId": "REPLACE_WITH_ATTEMPT_ID_FOR_CANDIDATE_PAGE_PAYLOAD_CHECK"
+  },
+  "resumeApiProbe": null,
+  "forbiddenMarkers": [
+    "correct_answer",
+    "short_answer_rules"
+  ]
+}

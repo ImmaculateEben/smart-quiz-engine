@@ -4,6 +4,8 @@ This runbook supports roadmap task `10.5 Security Tests` for the `Clavis` app.
 
 ## Scope (This Harness)
 
+- Attempt to fetch correct answers from candidate-facing payloads / APIs
+- Attempt cross-tenant access (tenant A admin -> tenant B exam export)
 - Attempt replay submission (`POST /api/candidate/attempts/[attemptId]/submit`)
 - Attempt duplicate attempt submission (concurrent submit requests)
 - Attempt timer manipulation (expired attempt save/submit probes)
@@ -15,15 +17,21 @@ This runbook supports roadmap task `10.5 Security Tests` for the `Clavis` app.
 - Supabase schema migrated through:
   - `007_attempt_status_submitting_lock.sql`
 - Seeded test data:
+  - candidate attempt ID for answer-key payload probe (candidate exam page)
   - in-progress attempt for replay/duplicate submit tests
   - expired attempt(s) for timer manipulation probes
   - known `examId` and `questionId` for the expired attempt save probe
+- Auth/cross-tenant fixtures:
+  - authenticated tenant-A admin session cookie (for cross-tenant export probe)
+  - tenant-B `examId` (or another exam outside tenant-A membership)
 
 ## Scripts (Node, no extra deps)
 
 - `npm run security:replay-submit`
 - `npm run security:duplicate-submit`
 - `npm run security:timer`
+- `npm run security:answer-key`
+- `npm run security:cross-tenant`
 
 All scripts use Node's built-in `fetch` and fixture files.
 
@@ -32,10 +40,25 @@ All scripts use Node's built-in `fetch` and fixture files.
 - `scripts/security/fixtures/replay-submit.json`
 - `scripts/security/fixtures/duplicate-submit.json`
 - `scripts/security/fixtures/timer-manipulation.json`
+- `scripts/security/fixtures/fetch-correct-answers.json`
+- `scripts/security/fixtures/cross-tenant-access.json`
 
 Replace placeholder IDs before running.
 
 ## Expected Outcomes
+
+### Fetch correct answers (candidate-facing payload/API probe)
+
+- Candidate exam page payload should render (`200`) and should **not** contain:
+  - `correct_answer`
+  - `short_answer_rules`
+- Optional resume API probe should return a non-`5xx` response and should not contain answer-key fields
+
+### Cross-tenant access (admin API)
+
+- Tenant-A admin probing tenant-B exam export should be blocked with one of:
+  - `403 FORBIDDEN`
+  - `404 EXAMS_NOT_FOUND`
 
 ### Replay submit
 
@@ -64,6 +87,8 @@ Replace placeholder IDs before running.
 
 ```powershell
 $env:CLAVIS_BASE_URL='http://localhost:3000'
+npm run security:answer-key
+npm run security:cross-tenant
 npm run security:replay-submit
 npm run security:duplicate-submit
 npm run security:timer
@@ -75,6 +100,14 @@ Concurrent duplicate-submit test with custom burst size:
 $env:CLAVIS_BASE_URL='http://localhost:3000'
 $env:SECURITY_CONCURRENCY='10'
 npm run security:duplicate-submit
+```
+
+Cross-tenant probe with cookie provided via env var instead of fixture:
+
+```powershell
+$env:CLAVIS_BASE_URL='http://localhost:3000'
+$env:SECURITY_COOKIE='sb-...=...; ...'
+npm run security:cross-tenant
 ```
 
 ## Execution Status (This Session)

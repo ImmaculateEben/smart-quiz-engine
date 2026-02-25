@@ -29,7 +29,7 @@ export default async function ExamPreviewPage({ params, searchParams }: PageProp
 
   const supabase = await createSupabaseServerClient();
   const institutionId = membership.institutionId;
-  const [examRes, sectionsRes, examQuestionsRes, questionsRes] = await Promise.all([
+  const [examRes, sectionsRes, examQuestionsRes] = await Promise.all([
     supabase
       .from("exams")
       .select("id,title,description,status,duration_minutes,passing_score,shuffle_questions,shuffle_options,show_result_immediately,allow_review,max_attempts,settings,published_at")
@@ -48,18 +48,21 @@ export default async function ExamPreviewPage({ params, searchParams }: PageProp
       .select("id,section_id,question_id,display_order,points,required")
       .eq("exam_id", examId)
       .eq("institution_id", institutionId)
-      .order("display_order"),
-    supabase
-      .from("questions")
-      .select("id,prompt,question_type,difficulty,is_active,deleted_at")
-      .eq("institution_id", institutionId)
-      .limit(1000)
+      .order("display_order")
   ]);
   if (!examRes.data) return <main className="mx-auto max-w-4xl px-6 py-10 text-sm">Exam not found.</main>;
 
   const exam = examRes.data;
   const eqs = examQuestionsRes.data ?? [];
-  const qMap = new Map((questionsRes.data ?? []).map((q) => [q.id, q]));
+  const selectedQuestionIds = [...new Set(eqs.map((eq) => eq.question_id).filter(Boolean))];
+  const { data: previewQuestions } = selectedQuestionIds.length
+    ? await supabase
+        .from("questions")
+        .select("id,prompt,question_type,difficulty,is_active,deleted_at")
+        .eq("institution_id", institutionId)
+        .in("id", selectedQuestionIds)
+    : { data: [] as Array<any> };
+  const qMap = new Map((previewQuestions ?? []).map((q) => [q.id, q]));
   const sections = sectionsRes.data ?? [];
 
   const validation: string[] = [];
@@ -82,13 +85,20 @@ export default async function ExamPreviewPage({ params, searchParams }: PageProp
     if (!auth.user || !membership) redirect(route(examId, { error: "forbidden" }));
 
     const supabase = await createSupabaseServerClient();
-    const [examRes, selectedRes, questionsRes] = await Promise.all([
+    const [examRes, selectedRes] = await Promise.all([
       supabase.from("exams").select("id,title,duration_minutes,status").eq("id", examId).eq("institution_id", membership.institutionId).single(),
-      supabase.from("exam_questions").select("question_id").eq("exam_id", examId).eq("institution_id", membership.institutionId),
-      supabase.from("questions").select("id,is_active,deleted_at").eq("institution_id", membership.institutionId).limit(1000)
+      supabase.from("exam_questions").select("question_id").eq("exam_id", examId).eq("institution_id", membership.institutionId)
     ]);
+    const selectedQuestionIds = [...new Set((selectedRes.data ?? []).map((eq) => eq.question_id).filter(Boolean))];
+    const { data: questionsData } = selectedQuestionIds.length
+      ? await supabase
+          .from("questions")
+          .select("id,is_active,deleted_at")
+          .eq("institution_id", membership.institutionId)
+          .in("id", selectedQuestionIds)
+      : { data: [] as Array<any> };
     if (!examRes.data) redirect(route(examId, { error: "not_found" }));
-    const qMap = new Map((questionsRes.data ?? []).map((q) => [q.id, q]));
+    const qMap = new Map((questionsData ?? []).map((q) => [q.id, q]));
     const issues: string[] = [];
     if (!examRes.data.title.trim()) issues.push("missing_title");
     if (!examRes.data.duration_minutes || examRes.data.duration_minutes <= 0) issues.push("invalid_duration");

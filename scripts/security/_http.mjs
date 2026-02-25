@@ -14,21 +14,33 @@ export function readJsonFixture(defaultRelativePath) {
   };
 }
 
-export async function postJson(url, body) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-security-test": "phase-10-5"
-    },
-    body: JSON.stringify(body ?? {})
-  });
-
+async function parseResponse(response) {
   let json = null;
   let text = "";
-  try {
-    json = await response.json();
-  } catch {
+  const contentType = (response.headers.get("content-type") || "").toLowerCase();
+
+  if (contentType.includes("application/json")) {
+    try {
+      json = await response.json();
+    } catch {
+      json = null;
+    }
+  } else {
+    try {
+      text = await response.text();
+    } catch {
+      text = "";
+    }
+    return {
+      ok: response.ok,
+      status: response.status,
+      json,
+      text,
+      contentType
+    };
+  }
+
+  if (json === null) {
     try {
       text = await response.text();
     } catch {
@@ -40,8 +52,41 @@ export async function postJson(url, body) {
     ok: response.ok,
     status: response.status,
     json,
-    text
+    text,
+    contentType
   };
+}
+
+export async function request(url, options = {}) {
+  const method = String(options.method || "GET").toUpperCase();
+  const headers = {
+    "x-security-test": "phase-10-5",
+    ...(options.headers && typeof options.headers === "object" ? options.headers : {})
+  };
+  const init = {
+    method,
+    headers
+  };
+
+  if (Object.prototype.hasOwnProperty.call(options, "jsonBody")) {
+    init.body = JSON.stringify(options.jsonBody ?? {});
+    if (!Object.keys(headers).some((k) => k.toLowerCase() === "content-type")) {
+      init.headers["content-type"] = "application/json";
+    }
+  } else if (Object.prototype.hasOwnProperty.call(options, "body")) {
+    init.body = options.body;
+  }
+
+  const response = await fetch(url, init);
+  return parseResponse(response);
+}
+
+export async function get(url, options = {}) {
+  return request(url, { ...options, method: "GET" });
+}
+
+export async function postJson(url, body, options = {}) {
+  return request(url, { ...options, method: "POST", jsonBody: body ?? {} });
 }
 
 export function printCaseResult(name, details) {
@@ -61,5 +106,5 @@ export function pass(name, lines) {
 export function summarizeResponse(label, res) {
   const errorCode =
     res?.json && typeof res.json === "object" && res.json !== null ? String(res.json.error ?? "") : "";
-  return `${label}: status=${res.status} ok=${res.ok} error=${errorCode || "-"}${res.text ? ` text=${res.text}` : ""}`;
+  return `${label}: status=${res.status} ok=${res.ok} error=${errorCode || "-"}${res.contentType ? ` contentType=${res.contentType}` : ""}${res.text ? ` text=${res.text}` : ""}`;
 }
