@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -8,11 +9,11 @@ import { formDataString, parseServerActionForm } from "@/lib/http/server-action-
 
 type PageProps = { searchParams?: Promise<Record<string, string | undefined>> };
 
-function route(params: Record<string, string | undefined>) {
+function route(params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && s.set(k, v));
   const q = s.toString();
-  return q ? `/admin/pins/allow-list?${q}` : "/admin/pins/allow-list";
+  return (q ? `/admin/pins/allow-list?${q}` : "/admin/pins/allow-list") as Route;
 }
 
 function parseIdentifiers(input: string) {

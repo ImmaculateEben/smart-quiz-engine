@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionAuthState } from "@/lib/auth/session";
@@ -10,11 +11,11 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | undefined>>;
 };
 
-function route(examId: string, params: Record<string, string | undefined>) {
+function route(examId: string, params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && s.set(k, v));
   const q = s.toString();
-  return q ? `/admin/exams/${examId}/preview?${q}` : `/admin/exams/${examId}/preview`;
+  return (q ? `/admin/exams/${examId}/preview?${q}` : `/admin/exams/${examId}/preview`) as Route;
 }
 
 export default async function ExamPreviewPage({ params, searchParams }: PageProps) {

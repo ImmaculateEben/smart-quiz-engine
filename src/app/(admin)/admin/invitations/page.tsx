@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -18,13 +19,13 @@ type InvitationsPageProps = {
   }>;
 };
 
-function buildRedirect(params: Record<string, string | undefined>) {
+function buildRedirect(params: Record<string, string | undefined>): Route {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value) search.set(key, value);
   });
   const qs = search.toString();
-  return qs ? `/admin/invitations?${qs}` : "/admin/invitations";
+  return (qs ? `/admin/invitations?${qs}` : "/admin/invitations") as Route;
 }
 
 function isValidRole(role: string): role is "owner" | "admin" | "editor" | "viewer" {

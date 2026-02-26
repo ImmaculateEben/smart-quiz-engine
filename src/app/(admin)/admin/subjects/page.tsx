@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -13,13 +14,13 @@ type SubjectsPageProps = {
   }>;
 };
 
-function buildRedirect(params: Record<string, string | undefined>) {
+function buildRedirect(params: Record<string, string | undefined>): Route {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value) search.set(key, value);
   }
   const qs = search.toString();
-  return qs ? `/admin/subjects?${qs}` : "/admin/subjects";
+  return (qs ? `/admin/subjects?${qs}` : "/admin/subjects") as Route;
 }
 
 function parseSettingsJson(raw: string) {

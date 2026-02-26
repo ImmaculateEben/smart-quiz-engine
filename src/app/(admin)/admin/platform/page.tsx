@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -13,11 +14,11 @@ type PlatformPageParams = {
   ok?: string;
 };
 
-function qs(path: string, params: Record<string, string | undefined>) {
+function qs(path: Route, params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v) s.set(k, v);
   const q = s.toString();
-  return q ? `${path}?${q}` : path;
+  return (q ? `${path}?${q}` : path) as Route;
 }
 
 function ensureSuperAdmin(auth: Awaited<ReturnType<typeof getSessionAuthState>>) {

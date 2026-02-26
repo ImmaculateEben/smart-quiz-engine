@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -28,11 +29,11 @@ const randomSelectFormSchema = z.object({
   hardCount: z.coerce.number().int().min(0).max(500)
 });
 
-function toRoute(examId: string, params: Record<string, string | undefined>) {
+function toRoute(examId: string, params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && s.set(k, v));
   const q = s.toString();
-  return q ? `/admin/exams/${examId}/questions?${q}` : `/admin/exams/${examId}/questions`;
+  return (q ? `/admin/exams/${examId}/questions?${q}` : `/admin/exams/${examId}/questions`) as Route;
 }
 
 async function ensureDefaultSection(examId: string, institutionId: string) {

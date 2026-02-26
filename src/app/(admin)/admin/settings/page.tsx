@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -14,13 +15,13 @@ type SettingsPageProps = {
   }>;
 };
 
-function buildRedirect(params: Record<string, string | undefined>) {
+function buildRedirect(params: Record<string, string | undefined>): Route {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value) search.set(key, value);
   }
   const qs = search.toString();
-  return qs ? `/admin/settings?${qs}` : "/admin/settings";
+  return (qs ? `/admin/settings?${qs}` : "/admin/settings") as Route;
 }
 
 const settingsFormSchema = z.object({

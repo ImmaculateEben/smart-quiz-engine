@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -44,10 +45,10 @@ const updateCaseFormSchema = z.object({
   resolutionNotes: z.string().trim().max(10_000)
 });
 
-function toPath(params: Record<string, string | undefined>) {
+function toPath(params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v) s.set(k, v);
-  return s.size ? `${OPS_PATH}?${s.toString()}` : OPS_PATH;
+  return (s.size ? `${OPS_PATH}?${s.toString()}` : OPS_PATH) as Route;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

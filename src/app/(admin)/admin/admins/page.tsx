@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -26,13 +27,13 @@ const toggleAdminActiveFormSchema = z.object({
   nextActive: zFormBooleanString
 });
 
-function buildRedirect(params: Record<string, string | undefined>) {
+function buildRedirect(params: Record<string, string | undefined>): Route {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value) search.set(key, value);
   });
   const qs = search.toString();
-  return qs ? `/admin/admins?${qs}` : "/admin/admins";
+  return (qs ? `/admin/admins?${qs}` : "/admin/admins") as Route;
 }
 
 export default async function AdminListPage({ searchParams }: AdminsPageProps) {
