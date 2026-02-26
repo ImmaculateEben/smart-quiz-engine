@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -14,11 +15,11 @@ const DIFFS = ["easy", "medium", "hard"] as const;
 type QType = (typeof QTYPES)[number];
 type Difficulty = (typeof DIFFS)[number];
 
-function qsRedirect(params: Record<string, string | undefined>) {
+function qsRedirect(params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && s.set(k, v));
   const q = s.toString();
-  return q ? `/admin/questions?${q}` : "/admin/questions";
+  return (q ? `/admin/questions?${q}` : "/admin/questions") as Route;
 }
 
 function parseObject(raw: string) {

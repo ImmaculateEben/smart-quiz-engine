@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -18,11 +19,11 @@ type ImportPageProps = {
   }>;
 };
 
-function redirectTo(params: Record<string, string | undefined>) {
+function redirectTo(params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && s.set(k, v));
   const q = s.toString();
-  return q ? `/admin/questions/import?${q}` : "/admin/questions/import";
+  return (q ? `/admin/questions/import?${q}` : "/admin/questions/import") as Route;
 }
 
 const xmlImportFormSchema = z.object({

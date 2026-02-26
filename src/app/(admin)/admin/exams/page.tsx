@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -15,11 +16,11 @@ type ExamsPageProps = {
   }>;
 };
 
-function pageRedirect(params: Record<string, string | undefined>) {
+function pageRedirect(params: Record<string, string | undefined>): Route {
   const s = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => v && s.set(k, v));
   const q = s.toString();
-  return q ? `/admin/exams?${q}` : "/admin/exams";
+  return (q ? `/admin/exams?${q}` : "/admin/exams") as Route;
 }
 
 function parseSettingsObject(raw: string) {

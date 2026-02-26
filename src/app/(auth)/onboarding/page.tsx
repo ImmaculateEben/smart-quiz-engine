@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -26,13 +27,13 @@ function slugifyInstitutionName(input: string) {
     .slice(0, 50);
 }
 
-function buildOnboardingRedirect(params: Record<string, string | undefined>) {
+function buildOnboardingRedirect(params: Record<string, string | undefined>): Route {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value) search.set(key, value);
   });
   const qs = search.toString();
-  return qs ? `/onboarding?${qs}` : "/onboarding";
+  return (qs ? `/onboarding?${qs}` : "/onboarding") as Route;
 }
 
 const ownerBootstrapFormSchema = z.object({
