@@ -20,9 +20,7 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  experimental: {
-    typedRoutes: true
-  },
+  typedRoutes: true,
   async headers() {
     return [
       {
