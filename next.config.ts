@@ -21,6 +21,7 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
+  outputFileTracingRoot: process.cwd(),
   async headers() {
     return [
       {
