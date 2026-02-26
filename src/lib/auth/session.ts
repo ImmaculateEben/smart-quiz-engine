@@ -2,11 +2,31 @@ import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { AuthContext, InstitutionRole, PlatformRole } from "@/lib/auth/rbac";
 
+function isRecoverableAuthSessionError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+
+  const authError = error as {
+    name?: string;
+    message?: string;
+    status?: number;
+    __isAuthError?: boolean;
+  };
+
+  if (authError.name === "AuthSessionMissingError") return true;
+  if (typeof authError.message === "string" && authError.message.includes("Auth session missing")) return true;
+  if (authError.__isAuthError && (authError.status === 400 || authError.status === 401)) return true;
+
+  return false;
+}
+
 export async function getCurrentSessionUser() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error) {
+    if (isRecoverableAuthSessionError(error)) {
+      return null;
+    }
     throw error;
   }
 
@@ -42,6 +62,14 @@ export async function getSessionAuthState(): Promise<SessionAuthState> {
   const { data: userResult, error: userError } = await supabase.auth.getUser();
 
   if (userError) {
+    if (isRecoverableAuthSessionError(userError)) {
+      return {
+        user: null,
+        profile: null,
+        memberships: [],
+        context: null
+      };
+    }
     throw userError;
   }
 
